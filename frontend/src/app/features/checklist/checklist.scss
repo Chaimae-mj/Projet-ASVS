@@ -1,0 +1,182 @@
+/* ===========================
+   OWASP-ish Theme (Navy + Blue/Teal)
+   =========================== */
+.asvs-app{
+  background:
+    radial-gradient(1200px 600px at 8% 0%, rgba(13,110,253,.12), transparent 55%),
+    radial-gradient(900px 500px at 100% 5%, rgba(32,201,151,.10), transparent 60%),
+    #f5f8ff;
+  color: #0f172a;
+}
+
+.asvs-sticky{ top: 12px; }
+
+.asvs-logo{
+  width: 52px;
+  height: 52px;
+  border: 1px solid rgba(13,110,253,.25);
+  background: rgba(13,110,253,.10);
+  color: #0b2a57;
+}
+.place-center{ place-items: center; }
+
+.asvs-dot{
+  width: 8px; height: 8px; border-radius: 999px;
+  background: rgba(13,110,253,.9);
+  display: inline-block;
+}
+
+
+.asvs-output-sticky{
+  height: calc(100vh - 110px);
+  display: flex;
+  flex-direction: column;
+}
+
+.asvs-output-sticky > .card-body{
+  overflow: auto;
+  flex: 1;
+}
+
+/* Pre blocks (output) */
+.asvs-pre, .asvs-code{
+  border: 1px solid rgba(15,23,42,.12);
+  background: #f8fbff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  max-height: 280px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.asvs-output-panel .btn.btn-sm {
+  line-height: 1.2;
+}
+.asvs-code{
+  white-space: pre;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Status badge colors (match your statusClass strings) */
+.asvs-status.DONE{
+  background: rgba(25,135,84,.12) !important;
+  color: #0f5132 !important;
+  border: 1px solid rgba(25,135,84,.25);
+}
+.asvs-status.IN_PROGRESS{
+  background: rgba(255,193,7,.12) !important;
+  color: #664d03 !important;
+  border: 1px solid rgba(255,193,7,.25);
+}
+.asvs-status.NOT_DONE{
+  background: rgba(220,53,69,.12) !important;
+  color: #842029 !important;
+  border: 1px solid rgba(220,53,69,.25);
+}
+.asvs-status.NOT_APPLICABLE{
+  background: rgba(108,117,125,.10) !important;
+  color: #495057 !important;
+  border: 1px solid rgba(108,117,125,.20);
+}
+.asvs-status.UNTESTED{
+  background: rgba(13,202,240,.08) !important;
+  color: #055160 !important;
+  border: 1px solid rgba(13,202,240,.18);
+}
+
+/* Better active button in sidebar areas */
+.btn-outline-secondary.active{
+  background: rgba(13,110,253,.10) !important;
+  border-color: rgba(13,110,253,.35) !important;
+  color: #0b2a57 !important;
+}
+
+/* AI buttons grid inside requirement */
+.asvs-ai-buttons{
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+/* Make sure long code doesn't break layout */
+pre, code{
+  max-width: 100%;
+}
+.asvs-output-panel{
+  position: fixed;
+  right: 20px;
+  top: 88px;
+  width: 420px;
+  z-index: 40;
+  animation: slideIn .2s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ===============================
+   Dynamic layout (normal -> split)
+   =============================== */
+
+.asvs-dynamic-layout{
+  display: block;
+  transition: all .25s ease;
+}
+
+/* ملي يبان output */
+.asvs-dynamic-layout.with-output{
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+/* main content */
+.asvs-dynamic-layout.with-output > .vstack,
+.asvs-dynamic-layout.with-output > .alert,
+.asvs-dynamic-layout.with-output > .card{
+  flex: 1 1 auto;
+}
+
+/* output panel */
+.asvs-output-panel{
+  flex: 0 0 420px;
+  max-width: 420px;
+  animation: slideIn .2s ease;
+}
+
+/* sticky inside layout */
+.asvs-output-panel .card{
+  position: sticky;
+  top: 12px;
+  max-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+}
+
+.asvs-output-panel .card-body{
+  overflow: auto;
+  flex: 1;
+}
+
+/* smooth appear */
+@keyframes slideIn {
+  from { transform: translateX(15px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.asvs-title{
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.asvs-subtitle{
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(15, 23, 42, .65);
+  line-height: 1.2;
+}
+
+.asvs-app h1,
+.asvs-app h2,
+.asvs-app h3,
+.asvs-app p { margin-bottom: 0; }

@@ -1,0 +1,86 @@
+// dashboard.scss — colorful pro design
+
+:host { display: block; }
+
+// ── Stat cards ────────────────────────────────
+.stat-card {
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 50%;
+  }
+
+  .stat-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.85; }
+  .stat-value { font-size: 2rem; font-weight: 800; line-height: 1.1; margin: 0.25rem 0; }
+  .stat-sub   { font-size: 0.75rem; opacity: 0.75; }
+
+  &--blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+  &--green  { background: linear-gradient(135deg, #22c55e, #15803d); }
+  &--orange { background: linear-gradient(135deg, #f97316, #c2410c); }
+  &--red    { background: linear-gradient(135deg, #ef4444, #991b1b); }
+}
+
+// ── Chart cards ───────────────────────────────
+.chart-title { font-weight: 700; font-size: 1rem; color: #1e293b; }
+.chart-sub   { font-size: 0.8rem; }
+.chart-wrap  { position: relative; }
+
+// ── Donut legend ──────────────────────────────
+.donut-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  justify-content: center;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: #475569;
+  }
+
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    &--green  { background: #22c55e; }
+    &--blue   { background: #3b82f6; }
+    &--orange { background: #f97316; }
+    &--gray   { background: #94a3b8; }
+  }
+}
+
+// ── Project cards ─────────────────────────────
+.asvs-project-card {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  color: inherit;
+  border: 1px solid transparent !important;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.12) !important;
+    border-color: #3b82f6 !important;
+    color: inherit;
+  }
+
+  &:active { transform: translateY(-1px); }
+}
+
+// ── Progress bar ──────────────────────────────
+.progress {
+  border-radius: 99px;
+  background: #f1f5f9;
+}

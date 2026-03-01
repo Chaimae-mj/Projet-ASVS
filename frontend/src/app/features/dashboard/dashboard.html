@@ -1,0 +1,239 @@
+<div class="asvs-app min-vh-100">
+  <div class="container-fluid p-0">
+
+    <!-- NAVBAR -->
+    <nav class="navbar bg-white border-bottom shadow-sm px-4 py-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="asvs-logo rounded-3 d-flex align-items-center justify-content-center fw-bold">ASVS</div>
+        <div>
+          <div class="fw-bold fs-5 lh-1">ASVS Manager</div>
+          <div class="text-muted small">Application Security Verification Standard</div>
+        </div>
+      </div>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <span class="badge rounded-pill bg-primary px-3 py-2">{{ projects?.length || 0 }} projects</span>
+        <button class="btn btn-outline-secondary btn-sm" type="button" (click)="loadProjects()" [disabled]="loading">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>⟳ Refresh
+        </button>
+      </div>
+    </nav>
+
+    <div class="container-xl py-4 px-4">
+
+      <!-- GLOBAL STATS CARDS -->
+      <div class="row g-3 mb-4" *ngIf="globalStats">
+        <div class="col-6 col-md-3">
+          <div class="stat-card stat-card--blue">
+            <div class="stat-label">Total Projects</div>
+            <div class="stat-value">{{ projects?.length || 0 }}</div>
+            <div class="stat-sub">active</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card stat-card--green">
+            <div class="stat-label">Global Compliance</div>
+            <div class="stat-value">{{ globalStats.compliance_percent }}%</div>
+            <div class="stat-sub">{{ globalStats.status.done }} done</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card stat-card--orange">
+            <div class="stat-label">In Progress</div>
+            <div class="stat-value">{{ globalStats.status.in_progress }}</div>
+            <div class="stat-sub">requirements</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card stat-card--red">
+            <div class="stat-label">Untested</div>
+            <div class="stat-value">{{ globalStats.status.untested }}</div>
+            <div class="stat-sub">{{ globalStats.status.not_done }} explicitly not done</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOADING STATS -->
+      <div class="row g-3 mb-4" *ngIf="!globalStats && !loading">
+        <div class="col-12 text-center text-muted py-3">
+          <span class="spinner-border spinner-border-sm me-2"></span> Loading global stats…
+        </div>
+      </div>
+
+      <!-- CHARTS ROW -->
+      <div class="row g-4 mb-4" *ngIf="globalStats">
+
+        <!-- DONUT — Compliance -->
+        <div class="col-12 col-md-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+              <div class="chart-title">🎯 Global Compliance</div>
+              <div class="chart-sub text-muted small mb-3">All projects combined</div>
+              <div class="chart-wrap flex-grow-1 d-flex align-items-center justify-content-center">
+                <canvas id="donutChart" width="220" height="220"></canvas>
+              </div>
+              <div class="donut-legend mt-3">
+                <div class="legend-item"><span class="dot dot--green"></span>Done</div>
+                <div class="legend-item"><span class="dot dot--blue"></span>In Progress</div>
+                <div class="legend-item"><span class="dot dot--orange"></span>Not Done</div>
+                <div class="legend-item"><span class="dot dot--gray"></span>Untested</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BAR — Per Project compliance -->
+        <div class="col-12 col-md-8">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+              <div class="chart-title">📊 Compliance per Project</div>
+              <div class="chart-sub text-muted small mb-3">Percentage of done requirements</div>
+              <div class="chart-wrap flex-grow-1" style="min-height:200px">
+                <canvas id="barChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HORIZONTAL BAR — Status breakdown -->
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <div class="chart-title">📈 Global Status Breakdown</div>
+              <div class="chart-sub text-muted small mb-3">All requirements across all projects</div>
+              <div style="height: 100px">
+                <canvas id="statusChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- MAIN ROW -->
+      <div class="row g-4">
+
+        <!-- LEFT — Create -->
+        <div class="col-12 col-lg-4">
+          <div class="card border-0 shadow-sm sticky-top asvs-sticky">
+            <div class="card-header bg-primary text-white border-0 py-3">
+              <div class="fw-bold">＋ New Project</div>
+              <div class="small opacity-75">Track ASVS requirements</div>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Project name</label>
+                <input type="text" class="form-control" placeholder="e.g. Payment API, Mobile App…"
+                  [(ngModel)]="newProjectName" (keyup.enter)="createProject()" [disabled]="creating" />
+                <div class="form-text">Press Enter or click Create</div>
+              </div>
+              <button class="btn btn-primary w-100 py-2" type="button"
+                (click)="createProject()" [disabled]="creating || !newProjectName.trim()">
+                <span *ngIf="creating" class="spinner-border spinner-border-sm me-2"></span>
+                {{ creating ? 'Creating…' : '＋ Create Project' }}
+              </button>
+              <div class="alert alert-danger mt-3 mb-0 py-2 small" *ngIf="error">
+                <strong>Error:</strong> {{ error }}
+              </div>
+            </div>
+            <div class="card-footer bg-body-tertiary border-0">
+              <div class="small text-muted">
+                <div class="fw-semibold mb-1">📋 Each project includes:</div>
+                <div>• 286 ASVS requirements (L1·L2·L3)</div>
+                <div>• AI suggestions in 7 languages</div>
+                <div>• Compliance tracking & evidence</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT — Projects grid -->
+        <div class="col-12 col-lg-8">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+              <h2 class="h5 fw-bold mb-0">Your Projects</h2>
+              <div class="text-muted small">Click a project to open its checklist</div>
+            </div>
+            <span class="badge text-bg-secondary rounded-pill px-3">{{ projects?.length || 0 }} total</span>
+          </div>
+
+          <!-- Skeleton -->
+          <div class="row g-3" *ngIf="loading">
+            <div class="col-12 col-md-6" *ngFor="let i of [1,2,3,4,5,6]">
+              <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                  <div class="placeholder-glow">
+                    <span class="placeholder col-7 mb-2 d-block rounded"></span>
+                    <span class="placeholder col-4 mb-3 d-block rounded"></span>
+                    <div class="d-flex gap-2">
+                      <span class="placeholder col-4 rounded-pill" style="height:20px"></span>
+                      <span class="placeholder col-3 rounded-pill" style="height:20px"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty -->
+          <div class="card border-0 shadow-sm" *ngIf="!loading && (!projects || projects.length === 0)">
+            <div class="card-body py-5 text-center">
+              <div class="display-4 mb-3">📁</div>
+              <div class="h5 fw-bold">No projects yet</div>
+              <div class="text-muted mb-3">Create your first project to start tracking ASVS requirements.</div>
+            </div>
+          </div>
+
+          <!-- Grid -->
+          <div class="row g-3" *ngIf="!loading && projects && projects.length > 0">
+            <div class="col-12 col-md-6" *ngFor="let p of projects">
+              <a class="card border-0 shadow-sm text-decoration-none h-100 asvs-project-card"
+                 [routerLink]="['/projects', p.id]">
+                <div class="card-body d-flex flex-column gap-2">
+
+                  <div class="d-flex align-items-start justify-content-between">
+                    <div class="asvs-logo rounded-2 fw-bold d-flex align-items-center justify-content-center"
+                         style="width:32px;height:32px;font-size:0.6rem;flex-shrink:0">ASVS</div>
+                    <span class="badge text-bg-light border small font-monospace">{{ p.id?.slice(0,8) }}…</span>
+                  </div>
+
+                  <div class="fw-semibold text-body fs-6 text-truncate" [title]="p.name">{{ p.name }}</div>
+
+                  <!-- Mini progress bar per project -->
+                  <div *ngIf="projectStatsMap[p.id]" class="mt-1">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <span class="small text-muted">Compliance</span>
+                      <span class="small fw-bold" [class.text-success]="projectStatsMap[p.id].compliance_percent >= 50"
+                            [class.text-danger]="projectStatsMap[p.id].compliance_percent < 50">
+                        {{ projectStatsMap[p.id].compliance_percent }}%
+                      </span>
+                    </div>
+                    <div class="progress" style="height:6px">
+                      <div class="progress-bar"
+                           [class.bg-success]="projectStatsMap[p.id].compliance_percent >= 75"
+                           [class.bg-warning]="projectStatsMap[p.id].compliance_percent >= 25 && projectStatsMap[p.id].compliance_percent < 75"
+                           [class.bg-danger]="projectStatsMap[p.id].compliance_percent < 25"
+                           [style.width.%]="projectStatsMap[p.id].compliance_percent"></div>
+                    </div>
+                  </div>
+                  <div *ngIf="!projectStatsMap[p.id]" class="progress mt-1" style="height:6px">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-secondary w-100"></div>
+                  </div>
+
+                  <div class="mt-auto d-flex align-items-center justify-content-between pt-2 border-top">
+                    <div class="d-flex gap-1">
+                      <span class="badge text-bg-light border small">286 reqs</span>
+                      <span class="badge text-bg-light border small">L1·L2·L3</span>
+                    </div>
+                    <span class="text-primary small fw-semibold">Open →</span>
+                  </div>
+
+                </div>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
