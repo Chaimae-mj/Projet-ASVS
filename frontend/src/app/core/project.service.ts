@@ -5,12 +5,12 @@ import { tap } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectService {
-  private api = 'http://localhost:5000';
-
+  //private api = 'http://localhost:5000';
+private api = 'https://epicontinental-bok-multibranchiate.ngrok-free.dev';
   private projectsSubject = new BehaviorSubject<any[]>([]);
   projects$ = this.projectsSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /** call this to actually fetch from backend */
   refreshProjects(): Observable<any[]> {
@@ -36,4 +36,24 @@ export class ProjectService {
       })
     );
   }
+
+  updateProject(projectId: string, data: any): Observable<any> {
+    return this.http.patch(`${this.api}/projects/${projectId}`, data).pipe(
+      tap(() => {
+        this.refreshProjects().subscribe();
+      })
+    );
+  }
+
+  fetchGithubFiles(projectId: string): Observable<{ files: string[] }> {
+    return this.http.get<{ files: string[] }>(`${this.api}/projects/${projectId}/github/files`);
+  }
+
+  deleteProject(projectId: string): Observable<any> {
+  return this.http.delete(`${this.api}/projects/${projectId}`).pipe(
+    tap(() => {
+      this.refreshProjects().subscribe();
+    })
+  );
+}
 }

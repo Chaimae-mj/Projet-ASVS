@@ -1,0 +1,104 @@
+<nav class="main-navbar" *ngIf="isLoggedIn()">
+    <div class="navbar-container">
+        <div class="navbar-left">
+            <button class="back-btn" (click)="goBack()" title="Go Back">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    class="back-icon">
+                    <path d="m15 18-6-6 6-6" />
+                </svg>
+            </button>
+            <a routerLink="/dashboard" class="navbar-brand">
+                <div class="brand-logo">SC</div>
+                <div class="brand-info">
+                    <span class="brand-text">SmartCheck</span>
+                    <span class="brand-sub">CORE ENGINE</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="navbar-center">
+            <div class="search-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    class="search-icon">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                </svg>
+                <input type="text" [placeholder]="t('SEARCH_PLACEHOLDER')" />
+            </div>
+        </div>
+
+        <div class="navbar-right">
+            <!-- Language Switcher -->
+            <div class="lang-switcher">
+                <button (click)="langService.setLang('EN')"
+                    [class.active]="langService.currentLang === 'EN'">EN</button>
+                <button (click)="langService.setLang('FR')"
+                    [class.active]="langService.currentLang === 'FR'">FR</button>
+            </div>
+
+            <!-- Theme Toggle -->
+            <button class="theme-toggle" (click)="themeService.toggleTheme()"
+                [title]="themeService.currentTheme === 'light' ? 'Dark Mode' : 'Light Mode'">
+                <svg *ngIf="themeService.currentTheme === 'light'" xmlns="http://www.w3.org/2000/svg" width="20"
+                    height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                <svg *ngIf="themeService.currentTheme === 'dark'" xmlns="http://www.w3.org/2000/svg" width="20"
+                    height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            </button>
+
+            <div class="user-profile">
+                <div class="user-info">
+                    <div class="user-name">{{ userRole }}</div>
+                    <div class="user-role">{{ t('USER_ROLE_HINT') }}</div>
+                </div>
+                <div class="user-avatar"
+                    [style.background]="'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))'">
+                    {{ userRole.charAt(0) }}
+                </div>
+
+                <div class="user-dropdown">
+                    <a routerLink="/admin/users" class="dropdown-item" *ngIf="isAdmin()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                        </svg>
+                        <span>{{ t('MEMBER_MGMT') }}</span>
+                    </a>
+                    <a routerLink="/admin/messages" class="dropdown-item" *ngIf="isAdmin()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <span>{{ t('DEV_MESSAGES') || 'Developer Messages' }}</span>
+                    </a>
+                    <div class="dropdown-divider" *ngIf="isAdmin()"></div>
+                    <button class="logout-btn" (click)="logout()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        <span>{{ t('NAV_LOGOUT') }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

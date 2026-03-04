@@ -10,6 +10,47 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("./db");
 
+// --- START MIGRATIONS ---
+(async () => {
+  try {
+    // 1. Add admin_comment (Developer Note)
+    const [reqRows] = await pool.execute("DESCRIBE project_requirements");
+    const reqFields = reqRows.map(r => r.Field);
+    if (!reqFields.includes('admin_comment')) {
+      console.log("🛠 Migration: Adding 'admin_comment' column...");
+      await pool.execute("ALTER TABLE project_requirements ADD COLUMN admin_comment TEXT");
+    }
+    // 2. Add auditor_comment (Admin Response) -> renamed to admin_reply for alignment
+    if (!reqFields.includes('admin_reply')) {
+      console.log("🛠 Migration: Adding 'admin_reply' column...");
+      await pool.execute("ALTER TABLE project_requirements ADD COLUMN admin_reply TEXT");
+    }
+
+    // 3. Create project_members table
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS project_members (
+        project_id VARCHAR(36),
+        user_id VARCHAR(36),
+        added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (project_id, user_id)
+      )
+    `);
+
+    // 4. Add github_url to projects table
+    const [projRows] = await pool.execute("DESCRIBE projects");
+    const projFields = projRows.map(r => r.Field);
+    if (!projFields.includes('github_url')) {
+      console.log("🛠 Migration: Adding 'github_url' column to projects...");
+      await pool.execute("ALTER TABLE projects ADD COLUMN github_url VARCHAR(255)");
+    }
+
+    console.log("✅ Migrations: Database is up to date.");
+  } catch (err) {
+    console.error("❌ Migration Error:", err.message);
+  }
+})();
+// --- END MIGRATIONS ---
+
 let fetch;
 try {
   const nodeFetch = require("node-fetch");
@@ -31,7 +72,14 @@ app.use(
   })
 );
 app.use(express.json());
-
+app.use(cors({
+  origin: [
+    'http://localhost:4200',
+    'https://epicontinental-bok-multibranchiate.ngrok-free.dev',
+    'https://TON-PROJET.vercel.app'
+  ],
+  credentials: true,
+}));
 console.log("JWT_SECRET exists?", !!process.env.JWT_SECRET);
 
 /* ======================
@@ -54,10 +102,10 @@ function flattenFromCategories(parsed) {
         typeof lvlRaw === "number"
           ? lvlRaw
           : String(lvlRaw || "")
-              .toUpperCase()
-              .replace("LEVEL", "")
-              .replace("L", "")
-              .trim();
+            .toUpperCase()
+            .replace("LEVEL", "")
+            .replace("L", "")
+            .trim();
 
       const lvlNum = Number(lvl);
       const asvsLevel = Number.isFinite(lvlNum) && lvlNum > 0 ? lvlNum : null;
@@ -112,15 +160,15 @@ function extractFirstJson(text) {
     .trim();
 
   // Step 2: try direct parse
-  try { return JSON.parse(cleaned); } catch {}
+  try { return JSON.parse(cleaned); } catch { }
 
   // Step 3: extract first { ... } block (handles text before/after JSON)
   const start = cleaned.indexOf("{");
-  const end   = cleaned.lastIndexOf("}");
+  const end = cleaned.lastIndexOf("}");
   if (start === -1 || end === -1 || end <= start) return null;
 
   const candidate = cleaned.slice(start, end + 1);
-  try { return JSON.parse(candidate); } catch {}
+  try { return JSON.parse(candidate); } catch { }
 
   // Step 4: try to fix common issues (trailing commas)
   try {
@@ -233,7 +281,14 @@ function authMiddleware(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { ...decoded, role: String(decoded.role || "").toUpperCase() };
+    let role = String(decoded.role || "").toUpperCase();
+
+    // Normalize roles to standard set
+    if (role === "ADMINISTRATEUR") role = "ADMIN";
+    if (role === "DÉVELOPPEUR" || role === "DEVELOPER") role = "DEVELOPER";
+    if (role === "AUDITEUR" || role === "AUDITOR") role = "AUDITOR";
+
+    req.user = { ...decoded, role };
     next();
   } catch (err) {
     console.log("❌ JWT VERIFY FAILED:", err?.name, err?.message);
@@ -292,7 +347,7 @@ app.post("/auth/login", async (req, res) => {
     const token = jwt.sign(
       { id: user.id, role: normalizedRole, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "7d" }
     );
 
     return res.json({ token, role: normalizedRole });
@@ -335,6 +390,76 @@ app.post("/auth/register", authMiddleware, roleMiddleware(["ADMIN"]), async (req
   }
 });
 
+app.get("/users", authMiddleware, roleMiddleware(["ADMIN"]), async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      "SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC"
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ GET USERS ERROR:", err);
+    res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
+app.patch("/users/:id", authMiddleware, roleMiddleware(["ADMIN"]), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, role, password } = req.body;
+
+    if (!name || !email || !role) {
+      return res.status(400).json({ error: "Name, email and role are required" });
+    }
+
+    const allowedRoles = ["ADMIN", "DEVELOPER", "AUDITOR"];
+    if (!allowedRoles.includes(role.toUpperCase())) {
+      return res.status(400).json({ error: "Invalid role" });
+    }
+
+    let query = "UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?";
+    let params = [name, email, role.toUpperCase(), id];
+
+    if (password && password.trim().length > 0) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      query = "UPDATE users SET name = ?, email = ?, role = ?, password_hash = ? WHERE id = ?";
+      params = [name, email, role.toUpperCase(), hashedPassword, id];
+    }
+
+    const [result] = await pool.execute(query, params);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.json({ message: "User updated ✅" });
+  } catch (err) {
+    console.error("❌ UPDATE USER ERROR:", err);
+    return res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
+app.delete("/users/:id", authMiddleware, roleMiddleware(["ADMIN"]), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Prevent deleting self? (Optional but good)
+    if (id === req.user.id) {
+      return res.status(400).json({ error: "Cannot delete your own admin account" });
+    }
+
+    const [result] = await pool.execute("DELETE FROM users WHERE id = ?", [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.json({ message: "User deleted ✅" });
+  } catch (err) {
+    console.error("❌ DELETE USER ERROR:", err);
+    return res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
 /* ======================
    REQUIREMENTS
 ====================== */
@@ -351,11 +476,64 @@ app.get("/requirements", authMiddleware, (req, res) => {
 ====================== */
 app.get("/projects", authMiddleware, roleMiddleware(["ADMIN", "AUDITOR", "DEVELOPER"]), async (req, res) => {
   try {
+    const role = String(req.user?.role || "").toUpperCase();
+    const userId = req.user?.id;
+
+    if (role === "DEVELOPER") {
+      // Developers only see assigned projects
+      const [rows] = await pool.execute(`
+        SELECT p.* FROM projects p
+        JOIN project_members pm ON p.id = pm.project_id
+        WHERE pm.user_id = ?
+        ORDER BY p.name
+      `, [userId]);
+      return res.json(rows);
+    }
+
     const [rows] = await pool.execute("SELECT * FROM projects ORDER BY name");
     res.json(rows);
   } catch (err) {
     console.error("❌ GET PROJECTS ERROR:", err);
     res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
+/* ======================
+   PROJECT MEMBERS
+====================== */
+app.get("/projects/:projectId/members", authMiddleware, async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const [rows] = await pool.execute(`
+      SELECT u.id, u.name, u.email, u.role, pm.added_at
+      FROM project_members pm
+      JOIN users u ON pm.user_id = u.id
+      WHERE pm.project_id = ?
+    `, [projectId]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/projects/:projectId/members", authMiddleware, roleMiddleware(["ADMIN"]), async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { userId } = req.body;
+    await pool.execute("INSERT INTO project_members (project_id, user_id) VALUES (?, ?)", [projectId, userId]);
+    res.json({ message: "Member added ✅" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete("/projects/:projectId/members/:userId", authMiddleware, roleMiddleware(["ADMIN"]), async (req, res) => {
+  try {
+    const { projectId, userId } = req.params;
+    await pool.execute("DELETE FROM project_members WHERE project_id = ? AND user_id = ?", [projectId, userId]);
+    res.json({ message: "Member removed ✅" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -401,9 +579,115 @@ app.post("/projects", authMiddleware, roleMiddleware(["ADMIN"]), async (req, res
   }
 });
 
+app.patch("/projects/:projectId", authMiddleware, roleMiddleware(["ADMIN", "DEVELOPER"]), async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { github_url } = req.body;
+
+    // Developer can only update if they are a member of the project
+    if (req.user.role === "DEVELOPER") {
+      const [members] = await pool.execute(
+        "SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?",
+        [projectId, req.user.id]
+      );
+      if (members.length === 0) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
+
+    if (github_url !== undefined) {
+      await pool.execute("UPDATE projects SET github_url = ? WHERE id = ?", [github_url, projectId]);
+    }
+    res.json({ message: "Project updated ✅" });
+  } catch (err) {
+    console.error("❌ UPDATE PROJECT ERROR:", err);
+    res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
+// Ajoute ce bloc dans server.js, après app.patch("/projects/:projectId", ...)
+
+app.delete("/projects/:projectId", authMiddleware, roleMiddleware(["ADMIN"]), async (req, res) => {
+  const { projectId } = req.params;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    await conn.execute("DELETE FROM project_requirements WHERE project_id = ?", [projectId]);
+    await conn.execute("DELETE FROM project_members WHERE project_id = ?", [projectId]);
+    await conn.execute("DELETE FROM projects WHERE id = ?", [projectId]);
+    await conn.commit();
+    console.log("✅ Project deleted:", projectId);
+    return res.json({ message: "Project deleted ✅" });
+  } catch (err) {
+    await conn.rollback();
+    console.error("❌ DELETE PROJECT ERROR:", err);
+    return res.status(500).json({ error: err.message || "Internal server error" });
+  } finally {
+    conn.release();
+  }
+});
 /* ======================
    CHECKLIST
 ====================== */
+app.get("/projects/:projectId/github/files", authMiddleware, roleMiddleware(["ADMIN", "DEVELOPER", "AUDITOR"]), async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const [projects] = await pool.execute("SELECT github_url FROM projects WHERE id = ?", [projectId]);
+
+    if (!projects.length || !projects[0].github_url) {
+      return res.status(404).json({ error: "No GitHub URL configured for this project" });
+    }
+
+    const githubUrl = projects[0].github_url.trim();
+    // Parse github URL (e.g. https://github.com/owner/repo)
+    const match = githubUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
+
+    if (!match) {
+      return res.status(400).json({ error: "Invalid GitHub URL format" });
+    }
+
+    const owner = match[1];
+    let repo = match[2];
+    if (repo.endsWith(".git")) repo = repo.slice(0, -4);
+
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/HEAD?recursive=1`;
+    console.log(`Fetching github files for ${owner}/${repo}`);
+
+    const HEADERS = {
+      "User-Agent": "ASVS-Core-Engine",
+      "Accept": "application/vnd.github.v3+json",
+    };
+
+    // Optional: Use PAT if available to avoid rate limits
+    if (process.env.GITHUB_TOKEN) {
+      HEADERS["Authorization"] = `token ${process.env.GITHUB_TOKEN}`;
+    }
+
+    const response = await fetch(apiUrl, { headers: HEADERS });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("GitHub API Error:", errText);
+      return res.status(response.status).json({ error: "GitHub API request failed", details: errText });
+    }
+
+    const data = await response.json();
+
+    if (!data || !data.tree) {
+      return res.status(500).json({ error: "Invalid response from GitHub API" });
+    }
+
+    const files = data.tree
+      .filter((node) => node.type === "blob") // Only actual files
+      .map((node) => node.path);
+
+    res.json({ files });
+  } catch (err) {
+    console.error("❌ GET GITHUB FILES ERROR:", err);
+    res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
 app.get(
   "/projects/:projectId/requirements",
   authMiddleware,
@@ -420,7 +704,7 @@ app.get(
 
     try {
       const [rows] = await pool.execute(
-        `SELECT requirement_id, applicability, status, comment, tool_used, source_code_reference
+        `SELECT requirement_id, applicability, status, comment, admin_comment, admin_reply, tool_used, source_code_reference
        FROM project_requirements
        WHERE project_id = ?`,
         [projectId]
@@ -435,6 +719,8 @@ app.get(
           applicability: "YES",
           status: "UNTESTED",
           comment: "",
+          admin_comment: "",
+          admin_reply: "",
           tool_used: "",
           source_code_reference: "",
         };
@@ -469,12 +755,13 @@ app.patch(
       };
     }
 
-    const status = payload?.status ? String(payload.status).toUpperCase() : null;
-    const applicability = payload?.applicability ? String(payload.applicability).toUpperCase() : null;
+    const status = (payload?.status && role === 'ADMIN') ? String(payload.status).toUpperCase() : null;
+    const applicability = (payload?.applicability && role === 'ADMIN') ? String(payload.applicability).toUpperCase() : null;
 
-    const comment = payload?.comment ?? null;
-    const tool_used = payload?.tool_used ?? null;
-    const source_code_reference = payload?.source_code_reference ?? null;
+    const comment = role === 'DEVELOPER' ? (payload?.comment ?? null) : null;
+    const admin_comment = role === 'DEVELOPER' ? (payload?.admin_comment ?? null) : null;
+    const tool_used = role === 'DEVELOPER' ? (payload?.tool_used ?? null) : null;
+    const source_code_reference = role === 'DEVELOPER' ? (payload?.source_code_reference ?? null) : null;
 
     if (status && !allowedStatus.includes(status)) return res.status(400).json({ error: "Invalid status" });
     if (applicability && !allowedApp.includes(applicability))
@@ -490,16 +777,17 @@ app.patch(
     try {
       await pool.execute(
         `INSERT INTO project_requirements
-        (id, project_id, requirement_id, status, applicability, comment, tool_used, source_code_reference)
+        (id, project_id, requirement_id, status, applicability, comment, admin_comment, admin_reply, tool_used, source_code_reference)
        VALUES
-        (?, ?, ?, COALESCE(?, 'UNTESTED'), COALESCE(?, 'YES'),
-         COALESCE(?, ''), COALESCE(?, ''), COALESCE(?, ''))
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE
         status = COALESCE(VALUES(status), status),
         applicability = COALESCE(VALUES(applicability), applicability),
-        comment = CASE WHEN ? = 'DEVELOPER' THEN VALUES(comment) ELSE comment END,
-        tool_used = CASE WHEN ? = 'DEVELOPER' THEN VALUES(tool_used) ELSE tool_used END,
-        source_code_reference = CASE WHEN ? = 'DEVELOPER' THEN VALUES(source_code_reference) ELSE source_code_reference END`,
+        comment = COALESCE(VALUES(comment), comment),
+        admin_comment = COALESCE(VALUES(admin_comment), admin_comment),
+        admin_reply = COALESCE(VALUES(admin_reply), admin_reply),
+        tool_used = COALESCE(VALUES(tool_used), tool_used),
+        source_code_reference = COALESCE(VALUES(source_code_reference), source_code_reference)`,
         [
           uuidv4(),
           projectId,
@@ -507,18 +795,55 @@ app.patch(
           finalStatus,
           finalApplicability,
           comment,
+          admin_comment,
+          req.body?.admin_reply ?? null, // handle admin_reply if passed in main payload or role ADMIN
           tool_used,
           source_code_reference,
-          role,
-          role,
-          role,
         ]
       );
+
+      // Add admin_reply if provided by Admin specifically
+      if (role === "ADMIN" && req.body?.admin_reply !== undefined) {
+        await pool.execute(
+          "UPDATE project_requirements SET admin_reply = ? WHERE project_id = ? AND requirement_id = ?",
+          [req.body.admin_reply || "", projectId, reqId]
+        );
+      }
 
       return res.json({ message: "Updated ✅" });
     } catch (err) {
       console.error("❌ PATCH REQUIREMENT ERROR:", err);
       return res.status(500).json({ error: err.message || "Internal server error" });
+    }
+  }
+);
+
+/* ======================
+   ADMIN MESSAGES
+====================== */
+app.get(
+  "/admin/messages",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  async (req, res) => {
+    try {
+      const [rows] = await pool.execute(`
+        SELECT 
+          pr.requirement_id, 
+          pr.admin_comment, 
+          pr.project_id, 
+          p.name as project_name,
+          pr.status,
+          pr.comment as evidence
+        FROM project_requirements pr
+        JOIN projects p ON pr.project_id = p.id
+        WHERE pr.admin_comment IS NOT NULL AND pr.admin_comment != ""
+        ORDER BY p.name ASC, pr.requirement_id ASC
+      `);
+      res.json(rows);
+    } catch (err) {
+      console.error("❌ GET ADMIN MESSAGES ERROR:", err);
+      res.status(500).json({ error: err.message || "Internal server error" });
     }
   }
 );
@@ -559,26 +884,66 @@ app.get(
       let no = 0;
       let na = 0;
 
+      const categories = {};
+
       for (const r of requirements) {
         const id = r["#"];
-        const pr = map.get(id) || { applicability: "YES", status: "UNTESTED" };
+        const catName = r["Category"] || "Other";
 
+        if (!categories[catName]) {
+          categories[catName] = {
+            total: 0,
+            applicable: 0,
+            done: 0,
+            not_done: 0,
+            in_progress: 0,
+            untested: 0,
+            not_applicable: 0,
+            compliance: 0
+          };
+        }
+
+        const pr = map.get(id) || { applicability: "YES", status: "UNTESTED" };
         const appv = String(pr.applicability || "YES").toUpperCase();
         const st = String(pr.status || "UNTESTED").toUpperCase();
 
+        categories[catName].total++;
+
         if (appv === "NO") { no++; continue; }
-        if (appv === "NA") { na++; continue; }
+        if (appv === "NA") {
+          na++;
+          categories[catName].na++;
+          continue;
+        }
 
         applicable++;
+        categories[catName].applicable++;
 
-        if (st === "DONE") done++;
-        else if (st === "IN_PROGRESS") in_progress++;
-        else if (st === "NOT_APPLICABLE") not_applicable++;
-        else if (st === "UNTESTED") untested++;
-        else not_done++;
+        if (st === "DONE") {
+          done++;
+          categories[catName].done++;
+        } else if (st === "IN_PROGRESS") {
+          in_progress++;
+          categories[catName].in_progress++;
+        } else if (st === "NOT_APPLICABLE") {
+          not_applicable++;
+          categories[catName].not_applicable++;
+        } else if (st === "UNTESTED") {
+          untested++;
+          categories[catName].untested++;
+        } else {
+          not_done++;
+          categories[catName].not_done++;
+        }
       }
 
       const compliance = applicable === 0 ? 0 : Math.round((done / applicable) * 100);
+
+      // Finalize category compliance
+      Object.keys(categories).forEach(k => {
+        const c = categories[k];
+        c.compliance = c.applicable === 0 ? 0 : Math.round((c.done / c.applicable) * 100);
+      });
 
       return res.json({
         total,
@@ -586,6 +951,7 @@ app.get(
         excluded: { no, na },
         status: { done, in_progress, not_done, not_applicable, untested },
         compliance_percent: compliance,
+        categories
       });
     } catch (err) {
       console.error("❌ STATS ERROR:", err);
@@ -614,7 +980,7 @@ app.post("/ai/suggest", authMiddleware, roleMiddleware(["DEVELOPER"]), async (re
 
     const langKey = String(language).toLowerCase();
     const profile = LANG_PROFILE[langKey] || LANG_PROFILE.javascript;
-    const model   = process.env.OPENROUTER_MODEL || "meta-llama/llama-3.3-70b-instruct:free";
+    const model = process.env.OPENROUTER_MODEL || "meta-llama/llama-3.3-70b-instruct:free";
 
     console.log("🔥 AI HIT (OpenRouter)", { requirementId, language: langKey, model });
 

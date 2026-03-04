@@ -41,8 +41,8 @@ export type AiSuggestRequest = {
 
 @Injectable({ providedIn: 'root' })
 export class AiService {
-  private api = 'http://localhost:5000';
-
+  //private api = 'http://localhost:5000';
+private api = 'https://epicontinental-bok-multibranchiate.ngrok-free.dev';
   constructor(private http: HttpClient) {}
 
   // (اختياري) خليه إذا باقي كتستعمله

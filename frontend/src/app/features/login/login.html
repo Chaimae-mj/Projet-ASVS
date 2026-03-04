@@ -1,18 +1,71 @@
-<div class="page">
-  <div class="card">
-    <h2>ASVS Manager</h2>
-    <p class="muted">Connectez-vous</p>
+<div class="login-page" [class.dark-theme]="themeService.isDarkMode">
+  <div class="login-card glass">
+    <div class="brand">
+      <div class="brand-logo">SC</div>
+      <h1>SmartCheck</h1>
+      <p>{{ t('LOGIN_SUB') }}</p>
+    </div>
+
+    <div class="error-msg" *ngIf="error">
+      {{ error }}
+    </div>
 
     <form (ngSubmit)="onLogin()">
-      <label>Email</label>
-      <input type="email" [(ngModel)]="email" name="email" required />
+      <div class="form-group">
+        <label>{{ t('EMAIL_ADDR') }}</label>
+        <div class="input-wrapper">
+          <input type="email" [(ngModel)]="email" name="email" [placeholder]="t('EMAIL_ADDR')" required
+            [disabled]="loading" />
+        </div>
+      </div>
 
-      <label>Mot de passe</label>
-      <input type="password" [(ngModel)]="password" name="password" required />
+      <div class="form-group">
+        <label>{{ t('PASSWORD') }}</label>
+        <div class="input-wrapper">
+          <input type="password" [(ngModel)]="password" name="password" placeholder="••••••••" required
+            [disabled]="loading" />
+        </div>
+      </div>
 
-      <button type="submit">Login</button>
+      <button type="submit" class="login-btn" [disabled]="loading">
+        <span *ngIf="loading" class="spinner-sm"></span>
+        {{ loading ? t('LOGIN_LOADING') : t('LOGIN_BTN') }}
+      </button>
     </form>
 
-    <p class="error" *ngIf="error">{{ error }}</p>
+    <div class="login-controls">
+      <div class="lang-switcher">
+        <button (click)="langService.setLang('EN')" [class.active]="langService.currentLang === 'EN'">EN</button>
+        <button (click)="langService.setLang('FR')" [class.active]="langService.currentLang === 'FR'">FR</button>
+      </div>
+      <button class="theme-toggle" (click)="themeService.toggleTheme()">
+        <svg *ngIf="!themeService.isDarkMode" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg *ngIf="themeService.isDarkMode" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="alert-hint">
+      <strong>{{ t('OR') }}</strong>
+      <div class="mt-1 small">
+        Email: <code>admin@test.com</code><br />
+        Password: <code>123456</code>
+      </div>
+    </div>
   </div>
 </div>

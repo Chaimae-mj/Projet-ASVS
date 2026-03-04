@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 export class AuthService {
   private api = 'http://localhost:5000';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   login(body: { email: string; password: string }) {
     return this.http.post(`${this.api}/auth/login`, body);
@@ -17,6 +17,10 @@ export class AuthService {
 
   getToken() {
     return localStorage.getItem('token');
+  }
+
+  isLoggedIn() {
+    return !!localStorage.getItem('token');
   }
 
   logout() {

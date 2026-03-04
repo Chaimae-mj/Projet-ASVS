@@ -7,6 +7,8 @@ export type RequirementProgress = {
   applicability: 'YES' | 'NO' | 'NA';
   status: 'UNTESTED' | 'DONE' | 'IN_PROGRESS' | 'NOT_DONE' | 'NOT_APPLICABLE';
   comment: string;
+  admin_comment: string;
+  admin_reply: string;
   tool_used: string;
   source_code_reference: string;
 };
@@ -34,13 +36,22 @@ export type ProjectStats = {
     untested: number;
   };
   compliance_percent: number;
+  categories: Record<string, {
+    total: number;
+    done: number;
+    not_done: number;
+    in_progress: number;
+    untested: number;
+    not_applicable: number;
+    compliance: number
+  }>;
 };
 
 @Injectable({ providedIn: 'root' })
 export class RequirementService {
-  private api = 'http://localhost:5000';
-
-  constructor(private http: HttpClient) {}
+  //private api = 'http://localhost:5000';
+private api = 'https://epicontinental-bok-multibranchiate.ngrok-free.dev';
+  constructor(private http: HttpClient) { }
 
   // ✅ GET merged checklist
   getChecklist(projectId: string): Observable<AsvsRequirement[]> {

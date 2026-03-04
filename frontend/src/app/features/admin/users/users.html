@@ -1,0 +1,134 @@
+<div class="admin-users-page" [class.dark-theme]="themeService.isDarkMode">
+    <div class="container">
+        <!-- Header -->
+        <header class="page-header">
+            <div class="header-content">
+                <h1>{{ t('MEMBER_MGMT') }}</h1>
+                <p>{{ t('SYSTEM_USERS') }}</p>
+            </div>
+        </header>
+
+        <div class="admin-grid">
+            <!-- Left: Add/Edit Form -->
+            <div class="form-section">
+                <div class="card glass">
+                    <div class="card-header">
+                        <h2>{{ editingUser ? t('EDIT_USER') : t('CREATE_USER') }}</h2>
+                    </div>
+                    <form (ngSubmit)="onSubmit()" #userForm="ngForm">
+                        <div class="form-group">
+                            <label>{{ t('FULL_NAME') }}</label>
+                            <input type="text" [(ngModel)]="user.name" name="name" required placeholder="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label>{{ t('EMAIL_ADDR') }}</label>
+                            <input type="email" [(ngModel)]="user.email" name="email" required
+                                placeholder="john@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>{{ t('PASSWORD') }}</label>
+                            <input type="password" [(ngModel)]="user.password" name="password" [required]="!editingUser"
+                                placeholder="••••••••">
+                            <small *ngIf="editingUser" class="hint">{{ t('LEAVE_BLANK_HINT') || 'Leave blank to keep
+                                current' }}</small>
+                        </div>
+                        <div class="form-group">
+                            <label>{{ t('USER_ROLE') }}</label>
+                            <select [(ngModel)]="user.role" name="role">
+                                <option value="ADMIN">{{ t('ADMIN') }}</option>
+                                <option value="DEVELOPER">{{ t('DEVELOPER') }}</option>
+                                <option value="AUDITOR">{{ t('AUDITOR') }}</option>
+                            </select>
+                        </div>
+
+                        <div *ngIf="message" class="alert" [class.error]="isError" [class.success]="!isError">
+                            {{ message }}
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" *ngIf="editingUser" class="btn-secondary" (click)="cancelEdit()">
+                                {{ t('CANCEL') }}
+                            </button>
+                            <button type="submit" class="btn-primary" [disabled]="loading || !userForm.form.valid">
+                                <span *ngIf="loading" class="spinner-sm"></span>
+                                {{ editingUser ? t('UPDATE') : t('CREATE') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right: Users List -->
+            <div class="list-section">
+                <div class="card glass">
+                    <div class="card-header">
+                        <h2>{{ t('SYSTEM_USERS') }}</h2>
+                        <span class="user-count">{{ users.length }}</span>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>{{ t('NAME') }}</th>
+                                    <th>{{ t('EMAIL') }}</th>
+                                    <th>{{ t('ROLE') }}</th>
+                                    <th>{{ t('ACTIONS') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let u of users" [class.editing]="editingUser?.id === u.id">
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="avatar">{{ u.name.charAt(0).toUpperCase() }}</div>
+                                            <div class="details">
+                                                <span class="name">{{ u.name }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="email-cell">{{ u.email }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="role-badge" [class]="u.role.toLowerCase()">
+                                            {{ t(u.role) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="actions">
+                                            <button class="btn-icon edit" (click)="editUser(u)" [title]="t('EDIT')">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M12 20h9"></path>
+                                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                            <button class="btn-icon delete" (click)="deleteUser(u.id)"
+                                                [title]="t('DELETE')">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path
+                                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                                    </path>
+                                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="!users.length && !loading">
+                                    <td colspan="3" class="empty-msg">No users found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,68 @@
+<div class="admin-messages-page" [class.dark-theme]="themeService.isDarkMode">
+    <div class="container">
+        <header class="page-header">
+            <div class="title-section">
+                <h1>{{ t('DEVELOPER_MESSAGES') || 'Developer Messages' }}</h1>
+                <p class="subtitle">{{ t('MESSAGES_SUBTITLE') || 'Review notes sent by developers across all projects'
+                    }}</p>
+            </div>
+            <button class="btn-refresh" (click)="fetchMessages()" [disabled]="loading">
+                <span *ngIf="!loading">🔄</span>
+                <span *ngIf="loading" class="spinner-sm"></span>
+                {{ t('REFRESH') }}
+            </button>
+        </header>
+
+        <div class="loading-state" *ngIf="loading && messages.length === 0">
+            <div class="spinner"></div>
+            <p>{{ t('LOADING_MESSAGES') || 'Loading developer notes...' }}</p>
+        </div>
+
+        <div class="error-state" *ngIf="error">
+            <p>❌ {{ error }}</p>
+            <button (click)="fetchMessages()">{{ t('RETRY') }}</button>
+        </div>
+
+        <div class="empty-state" *ngIf="!loading && messages.length === 0 && !error">
+            <div class="empty-icon">📂</div>
+            <h3>{{ t('NO_MESSAGES') || 'No messages found' }}</h3>
+            <p>{{ t('NO_MESSAGES_DESC') || 'Developers haven't left any notes for administrators yet.' }}</p>
+        </div>
+
+        <div class="messages-grid" *ngIf="messages.length > 0">
+            <div class="message-card" *ngFor="let m of messages">
+                <div class="card-header">
+                    <div class="project-info">
+                        <span class="project-tag">{{ m.project_name }}</span>
+                        <span class="req-id">#{{ m.requirement_id }}</span>
+                    </div>
+                    <div class="status-badge" [class]="statusClass(m.status)">
+                        {{ t(statusClass(m.status)) }}
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="note-section">
+                        <label>{{ t('DEVELOPER_NOTE') || 'Developer Note' }}</label>
+                        <div class="note-content">
+                            {{ m.admin_comment }}
+                        </div>
+                    </div>
+
+                    <div class="evidence-preview" *ngIf="m.evidence">
+                        <label>{{ t('EVIDENCE_PREVIEW') || 'Evidence Preview' }}</label>
+                        <p class="evidence-text">{{ m.evidence.slice(0, 150) }}{{ m.evidence.length > 150 ? '...' : ''
+                            }}</p>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <a [routerLink]="['/projects', m.project_id]" class="btn-view">
+                        {{ t('VIEW_IN_CHECKLIST') || 'View in Checklist' }}
+                        <span>→</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

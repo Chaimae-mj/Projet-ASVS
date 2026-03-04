@@ -1,549 +1,459 @@
-<!-- CHECKLIST PAGE (Bootstrap) -->
-<div class="asvs-app min-vh-100">
-  <div class="container-fluid py-3">
-    <div class="row g-3">
+<div class="checklist-page" [class.dark-theme]="themeService.isDarkMode">
+  <div class="dashboard-layout">
 
-      <!-- SIDEBAR (desktop) -->
-      <aside class="col-12 col-lg-3 d-none d-lg-block">
-        <div class="card shadow-sm border-0 sticky-top asvs-sticky">
-          <div class="card-body">
+    <!-- ═══════ LEFT SIDEBAR ═══════ -->
+    <aside class="projects-sidebar glass">
+      <div class="sidebar-header">
+        <h3>{{ t('PROJECT_OVERVIEW') }}</h3>
+      </div>
 
-            <!-- brand -->
-            <div class="d-flex align-items-center gap-3 mb-3">
-              <div class="asvs-logo rounded-4 d-grid place-center fw-bold">ASVS</div>
-              <div class="min-w-0">
-                <div class="h5 mb-0 fw-bold">ASVS Manager</div>
-                <div class="text-muted small">Project</div>
-                <div class="small font-monospace text-break opacity-75">{{ projectId }}</div>
-              </div>
+      <div class="project-details-view custom-scrollbar" *ngIf="stats">
+
+        <!-- Project header -->
+        <div class="project-header-card" *ngIf="currentProject">
+          <div class="focus-header">
+            <div class="focus-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
             </div>
-
-            <button class="btn btn-outline-primary w-100 mb-3" type="button" (click)="goBack()">
-              ← Back
-            </button>
-
-            <!-- filters -->
-            <div class="card border-0 bg-body-tertiary mb-3">
-              <div class="card-body">
-                <label class="form-label small text-muted">Level</label>
-                <select class="form-select" [ngModel]="selectedLevel" (ngModelChange)="setLevel($event)">
-                  <option [ngValue]="'ALL'">All levels</option>
-                  <option [ngValue]="1">Level 1</option>
-                  <option [ngValue]="2">Level 2</option>
-                  <option [ngValue]="3">Level 3</option>
-                </select>
-
-                <label class="form-label small text-muted mt-3">Search</label>
-                <div class="input-group">
-                  <span class="input-group-text">⌕</span>
-                  <input
-                    class="form-control"
-                    [ngModel]="search"
-                    (ngModelChange)="setSearch($event)"
-                    placeholder="ID, CWE, area, text..."
-                  />
-                </div>
-              </div>
-            </div>
-
-            <!-- areas -->
-            <div class="card border-0 bg-body-tertiary mb-3">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <div class="fw-bold">Areas</div>
-                  <span class="badge text-bg-secondary">{{ filtered.length }}</span>
-                </div>
-
-                <button
-                  class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center mb-2"
-                  [class.active]="selectedArea==='ALL'"
-                  (click)="setArea('ALL')"
-                  type="button"
-                >
-                  <span>All</span>
-                  <span class="badge text-bg-light border">{{ requirements.length }}</span>
-                </button>
-
-                <button
-                  class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center mb-2 text-start"
-                  *ngFor="let a of areas"
-                  [class.active]="selectedArea===a.name"
-                  (click)="setArea(a.name)"
-                  type="button"
-                >
-                  <span class="text-truncate">{{ a.name }}</span>
-                  <span class="badge text-bg-light border">{{ a.count }}</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- stats -->
-            <div class="card border-0 bg-body-tertiary mb-3" *ngIf="stats">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <div class="fw-bold">Stats</div>
-                  <span class="badge text-bg-primary">{{ stats.compliance_percent }}%</span>
-                </div>
-
-                <div class="row g-2">
-                  <div class="col-6">
-                    <div class="p-2 rounded-3 bg-white border">
-                      <div class="small text-muted">Done</div>
-                      <div class="h5 mb-0 fw-bold">{{ stats.status.done }}</div>
-                    </div>
-                  </div>
-                  <div class="col-6">
-                    <div class="p-2 rounded-3 bg-white border">
-                      <div class="small text-muted">In progress</div>
-                      <div class="h5 mb-0 fw-bold">{{ stats.status.in_progress }}</div>
-                    </div>
-                  </div>
-                  <div class="col-6">
-                    <div class="p-2 rounded-3 bg-white border">
-                      <div class="small text-muted">Not done</div>
-                      <div class="h5 mb-0 fw-bold">{{ stats.status.not_done }}</div>
-                    </div>
-                  </div>
-                  <div class="col-6">
-                    <div class="p-2 rounded-3 bg-white border">
-                      <div class="small text-muted">Untested</div>
-                      <div class="h5 mb-0 fw-bold">{{ stats.status.untested }}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="mt-3">
-                  <div class="progress" role="progressbar" aria-label="Compliance">
-                    <div class="progress-bar" [style.width.%]="stats.compliance_percent || 0"></div>
-                  </div>
-                  <div class="text-muted small mt-2">Compliance = Done / Applicable</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- role -->
-            <div class="card border-0 bg-body-tertiary">
-              <div class="card-body">
-                <div><b>Role:</b> {{ role }}</div>
-                <div class="text-muted small" *ngIf="role==='AUDITOR'">Read-only</div>
-                <div class="text-muted small" *ngIf="role==='ADMIN'">Can set status only</div>
-                <div class="text-muted small" *ngIf="role==='DEVELOPER'">Can edit evidence + AI tools</div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </aside>
-
-      <!-- CONTENT -->
-      <main class="col-12 col-lg-9">
-
-        <!-- TOPBAR -->
-        <div class="asvs-topbar d-flex align-items-center justify-content-between gap-3 mb-3">
-          <div class="d-flex align-items-start gap-2">
-            <button
-              class="btn btn-outline-secondary d-lg-none"
-              type="button"
-              data-bs-toggle="offcanvas"
-              data-bs-target="#asvsOffcanvas"
-              aria-controls="asvsOffcanvas"
-            >
-              ☰
-            </button>
-
-            <div>
-              <h1 class="asvs-title mb-0">Checklist</h1>
-              <div class="asvs-subtitle">Default status: <b>UNTESTED</b></div>
+            <div class="focus-info">
+              <h2 class="p-name">{{ currentProject?.name || t('PROJECT_DETAILS') }}</h2>
+              <span class="p-id">ID: {{ projectId.slice(0, 8) }}</span>
             </div>
           </div>
-
-          <div class="badge rounded-pill text-bg-light border d-flex align-items-center gap-2 px-3 py-2">
-            <span class="asvs-dot"></span>
-            <span>{{ filtered.length }} shown</span>
+          <div class="focus-stats">
+            <div class="stat-card-focus">
+              <div class="stat-header">
+                <span class="label">{{ t('COMPLIANCE') }}</span>
+                <span class="value">{{ stats.compliance_percent }}%</span>
+              </div>
+              <div class="progress-bar-mini">
+                <div class="fill" [style.width.%]="stats.compliance_percent"></div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- SPLIT AREA -->
-        <div class="asvs-split" [class.with-output]="showOutputPanel">
+        <div class="sidebar-section-divider">{{ t('CATEGORY') }}</div>
 
-          <!-- LEFT CONTENT -->
-          <div class="asvs-content">
+        <div class="sidebar-areas">
 
-            <div class="alert alert-info" *ngIf="loading">Loading requirements...</div>
-            <div class="alert alert-danger" *ngIf="error"><b>Error:</b> {{ error }}</div>
-
-            <div class="card border-0 shadow-sm" *ngIf="!loading && !error && filtered.length === 0">
-              <div class="card-body py-4 text-center">
-                <div class="display-6">📄</div>
-                <div class="h5 fw-bold mt-2">No requirements to show</div>
-                <div class="text-muted">Try changing filters (area/level/search).</div>
-              </div>
-            </div>
-
-            <div class="vstack gap-3" *ngIf="!loading && !error && filtered.length > 0">
-
-              <div class="card border-0 shadow-sm" *ngFor="let r of filtered; trackBy: trackByReq">
-
-                <!-- HEAD -->
-                <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-start gap-3">
-
-                    <button
-                      class="btn btn-link text-start p-0 flex-grow-1 text-decoration-none"
-                      (click)="openReq(r); toggle(r['#'])"
-                      type="button"
-                    >
-                      <div class="small font-monospace text-muted fw-semibold">{{ r['#'] }}</div>
-                      <div class="fw-semibold text-body">{{ r['Verification Requirement'] }}</div>
-
-                      <div class="d-flex flex-wrap gap-2 mt-2">
-                        <span class="badge text-bg-light border">L{{ r['ASVS Level'] }}</span>
-                        <span class="badge text-bg-light border" *ngIf="r['CWE']">CWE-{{ r['CWE'] }}</span>
-                        <span class="badge text-bg-light border">{{ r['Area'] }}</span>
-                      </div>
-                    </button>
-
-                    <div class="d-flex align-items-center gap-2 flex-wrap" (click)="$event.stopPropagation()">
-                      <span class="badge rounded-pill asvs-status" [ngClass]="statusClass(r.progress.status)">
-                        {{ r.progress.status }}
-                      </span>
-
-                      <select class="form-select form-select-sm w-auto" [disabled]="!canSetStatus" [(ngModel)]="r.progress.status">
-                        <option value="UNTESTED">UNTESTED</option>
-                        <option value="DONE">DONE</option>
-                        <option value="IN_PROGRESS">IN_PROGRESS</option>
-                        <option value="NOT_DONE">NOT_DONE</option>
-                        <option value="NOT_APPLICABLE">N/A</option>
-                      </select>
-
-                      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="toggle(r['#'])">
-                        {{ expanded[r['#']] ? '▲' : '▼' }}
-                      </button>
-                    </div>
-
-                  </div>
+          <!-- ALL AREAS -->
+          <div class="area-item" [class.active]="selectedArea === 'ALL'" (click)="setArea('ALL')">
+            <div class="area-icon"><span>🔍</span></div>
+            <div class="area-info">
+              <span class="a-name">{{ t('ALL_AREAS') }}</span>
+              <span class="a-meta">{{ requirements.length }} Reqs</span>
+              <div class="a-metrics">
+                <div class="m-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+                  <span>{{ stats.status.done }}</span>
                 </div>
-
-                <!-- BODY -->
-                <div class="border-top" *ngIf="expanded[r['#']]">
-                  <div class="card-body">
-
-                    <p class="text-muted mb-3">{{ r['Verification Requirement'] }}</p>
-
-                    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
-                      <button class="btn btn-sm btn-outline-success" [class.active]="r.progress.status==='DONE'"
-                              [disabled]="!canSetStatus" (click)="setStatus(r,'DONE')">Done</button>
-
-                      <button class="btn btn-sm btn-outline-warning" [class.active]="r.progress.status==='IN_PROGRESS'"
-                              [disabled]="!canSetStatus" (click)="setStatus(r,'IN_PROGRESS')">In progress</button>
-
-                      <button class="btn btn-sm btn-outline-danger" [class.active]="r.progress.status==='NOT_DONE'"
-                              [disabled]="!canSetStatus" (click)="setStatus(r,'NOT_DONE')">Not done</button>
-
-                      <select class="form-select form-select-sm w-auto" [disabled]="!canSetStatus"
-                              [(ngModel)]="r.progress.applicability"
-                              (change)="setApplicability(r, r.progress.applicability)">
-                        <option value="YES">Applicable</option>
-                        <option value="NO">Excluded (NO)</option>
-                        <option value="NA">N/A</option>
-                      </select>
-
-                      <button class="btn btn-sm btn-primary" [disabled]="saving[r['#']]" (click)="save(r)">
-                        {{ saving[r['#']] ? 'Saving…' : 'Save' }}
-                      </button>
-                    </div>
-
-                    <!-- Evidence + AI helper -->
-                    <div class="row g-3 align-items-start">
-
-                      <!-- Evidence -->
-                      <div class="col-12 col-xl-7">
-                        <div class="card border-0 bg-body-tertiary">
-                          <div class="card-body">
-                            <label class="form-label small text-muted">Comment</label>
-                            <textarea class="form-control" rows="6"
-                                      [(ngModel)]="r.progress.comment"
-                                      [disabled]="!canEditEvidence"
-                                      placeholder="Write your evidence here..."></textarea>
-
-                            <div class="row g-2 mt-2">
-                              <div class="col-12 col-md-6">
-                                <label class="form-label small text-muted">Tool used</label>
-                                <input class="form-control" [(ngModel)]="r.progress.tool_used" [disabled]="!canEditEvidence" />
-                              </div>
-                              <div class="col-12 col-md-6">
-                                <label class="form-label small text-muted">Source code reference</label>
-                                <input class="form-control" [(ngModel)]="r.progress.source_code_reference" [disabled]="!canEditEvidence" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- ✅ AI helper — FIXED: flex-wrap + per-button spinner + error display -->
-                      <div class="col-12 col-xl-5">
-                        <div class="card border-0 shadow-sm" *ngIf="canEditEvidence">
-                          <div class="card-body">
-                            <div class="fw-bold mb-1">AI helper</div>
-                            <div class="text-muted small mb-2">Generate response + code, then insert when you want.</div>
-
-                            <!-- ✅ FIXED: d-flex flex-wrap instead of d-grid -->
-                            <div class="d-flex flex-wrap gap-1">
-                              <button
-                                class="btn btn-sm"
-                                [ngClass]="hasAiResult(r['#'], l.key) ? 'btn-success' : 'btn-outline-secondary'"
-                                *ngFor="let l of aiLanguages"
-                                type="button"
-                                (click)="openReq(r); aiSuggest(r, l.key)"
-                                [disabled]="aiLoadingLang(r['#'], l.key)"
-                                [title]="hasAiResult(r['#'], l.key) ? 'Result ready — click to regenerate' : 'Generate'"
-                              >
-                                <span
-                                  *ngIf="aiLoadingLang(r['#'], l.key)"
-                                  class="spinner-border spinner-border-sm me-1"
-                                ></span>
-                                {{ l.label }}
-                              </button>
-                            </div>
-
-                            <!-- ✅ Per-language error display -->
-                            <ng-container *ngFor="let l of aiLanguages">
-                              <div
-                                class="alert alert-danger py-1 px-2 mt-1 small mb-0"
-                                *ngIf="aiError[r['#']]?.[l.key]"
-                              >
-                                <b>{{ l.label }}:</b> {{ aiError[r['#']][l.key] }}
-                              </div>
-                            </ng-container>
-
-                            <div class="text-muted small mt-2">
-                              ✅ Green = result ready. Output shown in right panel.
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="card border-0 bg-body-tertiary" *ngIf="!canEditEvidence">
-                          <div class="card-body text-muted small">AI tools are Developer-only.</div>
-                        </div>
-                      </div>
-
-                    </div>
-
-                  </div>
+                <div class="m-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  <span>{{ stats.status.not_done }}</span>
                 </div>
-
+                <div class="m-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  <span>{{ stats.status.in_progress + stats.status.untested }}</span>
+                </div>
+                <div class="m-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                  <span>{{ stats.status.not_applicable }}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- ✅ RIGHT OUTPUT PANEL — FIXED: Apply + Clear buttons added -->
-          <aside class="asvs-output-panel d-none d-xl-block" *ngIf="canEditEvidence && showOutputPanel">
-            <div class="card border-0 shadow-sm asvs-output-sticky">
-              <div class="card-body">
-
-                <div class="d-flex align-items-start justify-content-between gap-2">
-                  <div>
-                    <div class="fw-bold">AI Output</div>
-                    <div class="text-muted small">Sticky preview for selected requirement.</div>
+          <!-- CATEGORIES from stats -->
+          <ng-container *ngIf="statCategories.length > 0; else fallbackAreas">
+            <div class="area-item" *ngFor="let cat of statCategories"
+                 [class.active]="selectedArea === cat.key"
+                 (click)="setArea(cat.key)">
+              <div class="area-icon"><span>{{ getIcon(cat.key) }}</span></div>
+              <div class="area-info">
+                <span class="a-name">{{ t(cat.key) }}</span>
+                <span class="a-meta">{{ cat.value.total }} Reqs</span>
+                <div class="a-metrics">
+                  <div class="m-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+                    <span>{{ cat.value.done }}</span>
                   </div>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeOutputPanel()">✕</button>
+                  <div class="m-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span>{{ cat.value.not_done }}</span>
+                  </div>
+                  <div class="m-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>{{ cat.value.in_progress + cat.value.untested }}</span>
+                  </div>
+                  <div class="m-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <span>{{ cat.value.not_applicable }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="area-badge"
+                   [class.badge--high]="cat.value.compliance >= 75"
+                   [class.badge--mid]="cat.value.compliance >= 25 && cat.value.compliance < 75"
+                   [class.badge--low]="cat.value.compliance < 25">
+                {{ cat.value.compliance }}%
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-template #fallbackAreas>
+            <div class="area-item" *ngFor="let area of areasList"
+                 [class.active]="selectedArea === area.name"
+                 (click)="setArea(area.name)">
+              <div class="area-icon"><span>{{ getIcon(area.name) }}</span></div>
+              <div class="area-info">
+                <span class="a-name">{{ t(area.name) }}</span>
+                <span class="a-meta">{{ area.count }} {{ t('REQS') }}</span>
+              </div>
+            </div>
+          </ng-template>
+
+        </div>
+      </div>
+
+      <div class="project-loading-sidebar" *ngIf="!stats && loading">
+        <div class="skeleton-sidebar"></div>
+      </div>
+    </aside>
+
+    <!-- ═══════ MAIN CONTENT ═══════ -->
+    <main class="dashboard-main">
+
+      <!-- Header -->
+      <header class="page-header">
+        <div class="header-left">
+          <button class="btn-back" (click)="goBack()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            {{ t('BACK') }}
+          </button>
+          <div class="header-title">
+            <h1>{{ t('NAV_CHECKLIST') }}</h1>
+            <span class="project-id">{{ projectId.slice(0, 8) }}</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="btn-export" (click)="exportToExcel()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            {{ t('EXPORT_EXCEL') }}
+          </button>
+        </div>
+      </header>
+
+      <!-- Stats Bar -->
+      <div class="stats-bar" *ngIf="stats">
+        <div class="stat-box">
+          <div class="stat-val">{{ stats.compliance_percent }}%</div>
+          <div class="stat-lab">{{ t('COMPLIANCE') }}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">{{ stats.status.done }}</div>
+          <div class="stat-lab">{{ t('PASS') }}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">{{ stats.status.not_done }}</div>
+          <div class="stat-lab">{{ t('FAIL') }}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">{{ stats.status.in_progress + stats.status.untested }}</div>
+          <div class="stat-lab">{{ t('IN_PROGRESS') }}</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-row">
+        <div class="search-box">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" [ngModel]="search" (ngModelChange)="setSearch($event)" [placeholder]="t('SEARCH_REQS')" />
+        </div>
+        <div class="select-group">
+          <select [ngModel]="selectedArea" (ngModelChange)="setArea($event)">
+            <option value="ALL">{{ t('ALL_AREAS') }}</option>
+            <option *ngFor="let a of areas" [value]="a.name">{{ t(a.name) }} ({{ a.count }})</option>
+          </select>
+          <select [ngModel]="selectedLevel" (ngModelChange)="setLevel($event)">
+            <option value="ALL">{{ t('LEVEL_ALL') }}</option>
+            <option [value]="1">{{ t('LEVEL_1') }}</option>
+            <option [value]="2">{{ t('LEVEL_2') }}</option>
+            <option [value]="3">{{ t('LEVEL_3') }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Requirements List -->
+      <div class="req-list">
+        <div *ngFor="let r of filtered; trackBy: trackByReq"
+             class="req-card"
+             [class.expanded]="expanded[r['#']]"
+             [class.has-admin-reply]="r.progress.admin_reply && !isAdmin">
+
+          <div class="req-header" (click)="toggle(r['#'])">
+            <div class="req-id">{{ r['#'] }}</div>
+            <div class="req-text-summary">{{ r['Verification Requirement'] }}</div>
+            <div class="req-meta">
+              <span class="lvl-badge">L{{ r['ASVS Level'] }}</span>
+              <!-- badge notif si réponse admin non lue -->
+              <span class="notif-dot" *ngIf="r.progress.admin_reply && canEditEvidence" title="Admin replied">💬</span>
+              <div class="status-indicator" [class]="statusClass(r.progress.status)">
+                {{ t(statusClass(r.progress.status)) }}
+              </div>
+              <svg class="chevron" [class.open]="expanded[r['#']]" xmlns="http://www.w3.org/2000/svg" width="18"
+                height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <!-- ── Expanded Body ── -->
+          <div class="req-body" *ngIf="expanded[r['#']]">
+            <div class="body-grid">
+
+              <!-- LEFT: fields + evidence -->
+              <div class="main-fields">
+                <div class="field-info">
+                  <span class="label">{{ t('CATEGORY') }}:</span>
+                  <span class="val">{{ t(r['Area']) }}</span>
+                </div>
+                <div class="field-info">
+                  <span class="label">CWE:</span>
+                  <span class="val">{{ r['CWE'] }}</span>
                 </div>
 
-                <ng-container *ngIf="activeReq as r; else noActive">
+                <!-- ── DEVELOPER VIEW ── -->
+                <ng-container *ngIf="canEditEvidence">
 
-                  <div class="small text-muted mt-2">
-                    Selected: <span class="font-monospace fw-bold">{{ r['#'] }}</span>
-                  </div>
-
-                  <!-- Language tabs -->
-                  <div class="mt-3 d-flex flex-wrap gap-1">
-                    <button
-                      *ngFor="let l of aiLanguages"
-                      type="button"
-                      class="btn btn-sm"
-                      [ngClass]="{
-                        'btn-primary':          aiActiveLang[r['#']]===l.key && hasAiResult(r['#'], l.key),
-                        'btn-outline-primary':  aiActiveLang[r['#']]===l.key && !hasAiResult(r['#'], l.key),
-                        'btn-success':          aiActiveLang[r['#']]!==l.key && hasAiResult(r['#'], l.key),
-                        'btn-outline-secondary':aiActiveLang[r['#']]!==l.key && !hasAiResult(r['#'], l.key)
-                      }"
-                      (click)="setAiActiveLang(r['#'], l.key)"
-                      [disabled]="!hasAiResult(r['#'], l.key) && !aiLoadingLang(r['#'], l.key)"
-                    >
-                      <span *ngIf="aiLoadingLang(r['#'], l.key)" class="spinner-border spinner-border-sm me-1"></span>
-                      {{ l.label }}
-                    </button>
-                  </div>
-
-                  <ng-container *ngIf="aiActiveLang[r['#']] as activeLang">
-                    <ng-container *ngIf="aiStore?.[r['#']]?.[activeLang] as data; else noData">
-
-                      <!-- Summary -->
-                      <div class="mt-3" *ngIf="data.summary">
-                        <div class="small text-muted mb-1 fw-bold">📋 Summary</div>
-                        <pre class="asvs-pre mb-0">{{ data.summary }}</pre>
-                      </div>
-
-                      <!-- What to do -->
-                      <div class="mt-3" *ngIf="data.what_to_do?.length">
-                        <div class="small text-muted mb-1 fw-bold">✅ What to do</div>
-                        <ol class="small ps-3 mb-0">
-                          <li *ngFor="let step of data.what_to_do" class="mb-1">{{ step }}</li>
-                        </ol>
-                      </div>
-
-                      <!-- Evidence -->
-                      <div class="mt-3" *ngIf="data.evidence">
-                        <div class="small text-muted mb-1 fw-bold">🔍 Evidence</div>
-                        <pre class="asvs-pre mb-0">{{ data.evidence }}</pre>
-                      </div>
-
-                      <!-- Files -->
-                      <div class="mt-3" *ngIf="data.files?.length">
-                        <div class="small text-muted mb-1 fw-bold">📁 Files</div>
-                        <div class="d-flex flex-wrap gap-1">
-                          <span class="badge text-bg-light border font-monospace small" *ngFor="let f of data.files">{{ f }}</span>
-                        </div>
-                      </div>
-
-                      <!-- Code -->
-                    <div class="mt-3" *ngIf="data.code">
-  <div class="d-flex justify-content-between align-items-center mb-1">
-    <div class="small text-muted">Code</div>
-
-    <button
-      type="button"
-      class="btn btn-sm"
-      [ngClass]="isCopied(r['#'], activeLang, 'code') ? 'btn-success' : 'btn-outline-secondary'"
-      (click)="copyText(r['#'], activeLang, 'code', data.code)"
-      title="Copy code"
-    >
-      {{ isCopied(r['#'], activeLang, 'code') ? 'Copied ✅' : 'Copy' }}
-    </button>
-  </div>
-
-  <pre class="asvs-code mb-0"><code>{{ data.code }}</code></pre>
-</div>
-
-                      <!-- Assumptions -->
-                      <div class="mt-3" *ngIf="data.assumptions?.length">
-                        <div class="small text-muted mb-1 fw-bold">⚠️ Assumptions</div>
-                        <ul class="small ps-3 mb-0">
-                          <li *ngFor="let a of data.assumptions">{{ a }}</li>
-                        </ul>
-                      </div>
-
-                      <!-- Questions -->
-                      <div class="mt-3" *ngIf="data.questions?.length">
-                        <div class="small text-muted mb-1 fw-bold">❓ Questions</div>
-                        <ul class="small ps-3 mb-0">
-                          <li *ngFor="let q of data.questions">{{ q }}</li>
-                        </ul>
-                      </div>
-
-                      <!-- Raw -->
-                      <details class="mt-3">
-                        <summary class="text-muted small" style="cursor:pointer">Raw JSON</summary>
-                        <pre class="asvs-pre mt-2 mb-0" style="font-size:0.65rem">{{ data.raw | json }}</pre>
-                      </details>
-
-                      <!-- ✅ FIXED: Apply + Clear buttons -->
-                      <div class="d-flex gap-2 mt-3">
-                        <button
-                          class="btn btn-success btn-sm flex-grow-1"
-                          type="button"
-                          (click)="applyAiToEvidence(r, activeLang)"
-                        >
-                          ✅ Apply to Evidence
-                        </button>
-                        <button
-                          class="btn btn-outline-danger btn-sm"
-                          type="button"
-                          (click)="clearAi(r['#'], activeLang)"
-                          title="Clear this result"
-                        >
-                          🗑
-                        </button>
-                      </div>
-
-                    </ng-container>
-
-                    <ng-template #noData>
-                      <div class="alert alert-light border mt-3 small">
-                        No AI output yet for <b>{{ activeLang }}</b>.<br>
-                        Click the button in the AI helper to generate.
-                      </div>
-                    </ng-template>
-                  </ng-container>
-
-                  <ng-container *ngIf="!aiActiveLang[r['#']]">
-                    <div class="alert alert-light border mt-3 small">
-                      Select a language tab (or generate) to show output.
+                  <!-- Admin reply visible en haut pour le dev -->
+                  <div class="admin-reply-view admin-reply-view--dev" *ngIf="r.progress.admin_reply">
+                    <div class="admin-reply-view__header">
+                      <span>🛡️</span>
+                      <span>Réponse de l'Admin</span>
                     </div>
-                  </ng-container>
+                    <div class="admin-reply-view__text">{{ r.progress.admin_reply }}</div>
+                  </div>
+
+                  <div class="evidence-section">
+                    <label>{{ t('EVIDENCE') }}</label>
+                    <textarea [(ngModel)]="r.progress.comment" rows="4"
+                      placeholder="Describe findings, test steps..."></textarea>
+                    <div class="evidence-meta">
+                      <div class="meta-item">
+                        <label>{{ t('TOOLS') }}</label>
+                        <input type="text" [(ngModel)]="r.progress.tool_used" placeholder="e.g. Burp, ZAP, Manual" />
+                      </div>
+                      <div class="meta-item">
+                        <label>{{ t('REFERENCES') }}</label>
+                        <input type="text" [(ngModel)]="r.progress.source_code_reference"
+                          placeholder="e.g. auth-svc/login.java:12" />
+                      </div>
+                    </div>
+                    <!-- Message du dev pour l'admin -->
+                    <div class="admin-message-section">
+                      <label>💬 Message pour l'Admin</label>
+                      <textarea [(ngModel)]="r.progress.admin_comment" rows="2"
+                        placeholder="Laisse une note pour l'admin ou l'auditeur..."></textarea>
+                    </div>
+                  </div>
+
+                  <!-- AI -->
+                  <div class="ai-actions">
+                    <label class="ai-label">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                      </svg>
+                      {{ t('AI_DEVELOPER_HELP') || 'AI Developer Help' }}
+                    </label>
+                    <div class="ai-grid">
+                      <button *ngFor="let lang of aiLanguages" class="btn-ai"
+                        [disabled]="aiLoadingLang(r['#'], lang.key)"
+                        (click)="aiSuggest(r, lang.key)">
+                        {{ lang.label.replace('AI ', '') }}
+                        <span *ngIf="aiLoadingLang(r['#'], lang.key)" class="spinner-sm"></span>
+                      </button>
+                    </div>
+                  </div>
 
                 </ng-container>
 
-                <ng-template #noActive>
-                  <div class="alert alert-light border mt-3 small">
-                    Click a requirement header or generate button to view output here.
+                <!-- ── ADMIN / AUDITOR VIEW ── -->
+                <ng-container *ngIf="!canEditEvidence">
+
+                  <div class="evidence-view">
+
+                    <!-- Evidence du dev -->
+                    <div class="view-group" *ngIf="r.progress.comment">
+                      <label>{{ t('EVIDENCE') }}</label>
+                      <div class="comment-text">{{ r.progress.comment }}</div>
+                    </div>
+
+                    <!-- Tools + Refs -->
+                    <div class="view-meta-grid" *ngIf="r.progress.tool_used || r.progress.source_code_reference">
+                      <div class="view-item" *ngIf="r.progress.tool_used">
+                        <label>{{ t('TOOLS') }}</label>
+                        <div class="val">{{ r.progress.tool_used }}</div>
+                      </div>
+                      <div class="view-item" *ngIf="r.progress.source_code_reference">
+                        <label>{{ t('REFERENCES') }}</label>
+                        <div class="val">{{ r.progress.source_code_reference }}</div>
+                      </div>
+                    </div>
+
+                    <!-- Message du dev (bleu) -->
+                    <div class="dev-message-box" *ngIf="r.progress.admin_comment">
+                      <div class="dev-message-box__header">
+                        <span class="dev-message-box__icon">💬</span>
+                        <span class="dev-message-box__label">Message du Developer</span>
+                      </div>
+                      <div class="dev-message-box__text">{{ r.progress.admin_comment }}</div>
+                    </div>
+
+                    <!-- Réponse admin — editable par ADMIN, lecture pour AUDITOR -->
+                    <div class="admin-reply-section" *ngIf="isAdmin">
+                      <label class="admin-reply-section__label">
+                        <span>🛡️</span> Réponse Admin
+                      </label>
+                      <textarea [(ngModel)]="r.progress.admin_reply" rows="3"
+                        placeholder="Répondre au developer, laisser des instructions...">
+                      </textarea>
+                    </div>
+
+                    <div class="admin-reply-view" *ngIf="!isAdmin && r.progress.admin_reply">
+                      <div class="admin-reply-view__header">
+                        <span>🛡️</span>
+                        <span>Réponse Admin</span>
+                      </div>
+                      <div class="admin-reply-view__text">{{ r.progress.admin_reply }}</div>
+                    </div>
+
+                    <div class="no-data"
+                      *ngIf="!r.progress.comment && !r.progress.admin_comment && !r.progress.tool_used">
+                      <p>{{ t('NO_EVIDENCE_YET') || 'No evidence provided yet.' }}</p>
+                    </div>
+
                   </div>
-                </ng-template>
+                </ng-container>
 
               </div>
+              <!-- END main-fields -->
+
+              <!-- RIGHT: status + save -->
+              <div class="action-sidebar">
+                <label>{{ t('ROLE') }}</label>
+                <div class="status-selector" *ngIf="canSetStatus">
+                  <button (click)="setStatus(r, 'DONE')" [class.active]="r.progress.status === 'DONE'" class="btn-s DONE">{{ t('DONE') }}</button>
+                  <button (click)="setStatus(r, 'NOT_DONE')" [class.active]="r.progress.status === 'NOT_DONE'" class="btn-s FAIL">{{ t('NOT_DONE') }}</button>
+                  <button (click)="setStatus(r, 'IN_PROGRESS')" [class.active]="r.progress.status === 'IN_PROGRESS'" class="btn-s PROGRESS">{{ t('IN_PROGRESS') }}</button>
+                  <button (click)="setStatus(r, 'NOT_APPLICABLE')" [class.active]="r.progress.status === 'NOT_APPLICABLE'" class="btn-s NA">{{ t('NOT_APPLICABLE') }}</button>
+                </div>
+
+                <button class="btn-save" (click)="save(r)" [disabled]="saving[r['#']]" [class.saved]="saved[r['#']]">
+                  <span *ngIf="saving[r['#']]" class="spinner-sm"></span>
+                  <span *ngIf="saved[r['#']]">✅</span>
+                  {{ saving[r['#']] ? t('SAVING') : (saved[r['#']] ? (t('SAVED') || 'Saved!') : t('SAVE')) }}
+                </button>
+              </div>
+              <!-- END action-sidebar -->
+
             </div>
-          </aside>
+            <!-- END body-grid -->
+          </div>
+          <!-- END req-body -->
 
         </div>
-      </main>
+        <!-- END req-card -->
+      </div>
+      <!-- END req-list -->
+
+    </main>
+  </div>
+
+  <!-- ═══════ TOAST NOTIFICATION ═══════ -->
+  <div class="save-toast" [class.show]="showToast">
+    <span class="toast-icon">✅</span>
+    <span class="toast-msg">Bien enregistré !</span>
+  </div>
+
+  <!-- ═══════ AI SIDEBAR ═══════ -->
+  <div class="ai-sidebar" [class.open]="showOutputPanel">
+    <div class="ai-sidebar-overlay" (click)="closeOutputPanel()"></div>
+    <div class="ai-sidebar-inner">
+      <header class="ai-header">
+        <div class="req-ref" *ngIf="activeReq">
+          <h3>{{ activeReq['#'] }}</h3>
+          <p>{{ t('AI_SUGGESTION') }}</p>
+        </div>
+        <button class="btn-close" (click)="closeOutputPanel()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </header>
+      <div class="ai-content" *ngIf="activeReq">
+        <div class="ai-tabs">
+          <button *ngFor="let l of aiLanguages"
+            [hidden]="!hasAiResult(activeReq['#'], l.key)"
+            [class.active]="aiActiveLang[activeReq['#']] === l.key"
+            (click)="setAiActiveLang(activeReq['#'], l.key)">
+            {{ l.label }}
+          </button>
+        </div>
+        <div class="ai-body" *ngIf="aiStore[activeReq['#']]?.[aiActiveLang[activeReq['#']]]; let data">
+          <div class="ai-section">
+            <h4>{{ t('AI_SUMMARY') }}</h4>
+            <p>{{ data.summary }}</p>
+          </div>
+          <div class="ai-section">
+            <h4>{{ t('AI_WHAT_TO_DO') }}</h4>
+            <ul>
+              <li *ngFor="let step of data.what_to_do">{{ step }}</li>
+            </ul>
+          </div>
+          <div class="ai-section" *ngIf="data.code">
+            <div class="section-header">
+              <h4>{{ t('AI_CODE') }}</h4>
+              <button class="btn-copy" (click)="copyText(activeReq['#'], data.language, 'code', data.code)">
+                {{ isCopied(activeReq['#'], data.language, 'code') ? t('COPIED') : t('COPY') }}
+              </button>
+            </div>
+            <pre><code>{{ data.code }}</code></pre>
+          </div>
+          <div class="ai-footer">
+            <button class="btn-apply" (click)="applyAiToEvidence(activeReq, data.language)">
+              {{ t('APPLY_AI') }}
+            </button>
+          </div>
+        </div>
+        <div class="ai-loading-big" *ngIf="aiLoadingAny(activeReq['#'])">
+          <div class="spinner"></div>
+          <p>{{ t('LOADING') }}</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- OFFCANVAS sidebar (mobile) -->
-  <div class="offcanvas offcanvas-start" tabindex="-1" id="asvsOffcanvas" aria-labelledby="asvsOffcanvasLabel">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title fw-bold" id="asvsOffcanvasLabel">Filters</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-
-      <!-- Level -->
-      <label class="form-label small text-muted">Level</label>
-      <select class="form-select mb-3" [ngModel]="selectedLevel" (ngModelChange)="setLevel($event)">
-        <option [ngValue]="'ALL'">All levels</option>
-        <option [ngValue]="1">Level 1</option>
-        <option [ngValue]="2">Level 2</option>
-        <option [ngValue]="3">Level 3</option>
-      </select>
-
-      <!-- Search -->
-      <label class="form-label small text-muted">Search</label>
-      <input class="form-control mb-3" [ngModel]="search" (ngModelChange)="setSearch($event)" placeholder="ID, CWE, area, text..." />
-
-      <!-- Areas -->
-      <div class="fw-bold mb-2">Areas</div>
-      <button
-        class="btn btn-outline-secondary w-100 d-flex justify-content-between mb-2"
-        [class.active]="selectedArea==='ALL'"
-        (click)="setArea('ALL')"
-        type="button"
-        data-bs-dismiss="offcanvas"
-      >
-        <span>All</span>
-        <span class="badge text-bg-light border">{{ requirements.length }}</span>
-      </button>
-      <button
-        class="btn btn-outline-secondary w-100 d-flex justify-content-between mb-2 text-start"
-        *ngFor="let a of areas"
-        [class.active]="selectedArea===a.name"
-        (click)="setArea(a.name)"
-        type="button"
-        data-bs-dismiss="offcanvas"
-      >
-        <span class="text-truncate">{{ a.name }}</span>
-        <span class="badge text-bg-light border">{{ a.count }}</span>
-      </button>
-
-    </div>
-  </div>
 </div>

@@ -1,0 +1,66 @@
+[
+  {
+    "Field": "id",
+    "Type": "char(36)",
+    "Null": "NO",
+    "Key": "PRI",
+    "Default": null,
+    "Extra": ""
+  },
+  {
+    "Field": "project_id",
+    "Type": "char(36)",
+    "Null": "YES",
+    "Key": "MUL",
+    "Default": null,
+    "Extra": ""
+  },
+  {
+    "Field": "requirement_id",
+    "Type": "varchar(20)",
+    "Null": "YES",
+    "Key": "MUL",
+    "Default": null,
+    "Extra": ""
+  },
+  {
+    "Field": "applicability",
+    "Type": "enum('YES','NO','NA')",
+    "Null": "YES",
+    "Key": "",
+    "Default": "YES",
+    "Extra": ""
+  },
+  {
+    "Field": "status",
+    "Type": "enum('DONE','IN_PROGRESS','NOT_DONE','NOT_APPLICABLE')",
+    "Null": "YES",
+    "Key": "",
+    "Default": "NOT_DONE",
+    "Extra": ""
+  },
+  {
+    "Field": "comment",
+    "Type": "text",
+    "Null": "YES",
+    "Key": "",
+    "Default": null,
+    "Extra": ""
+  },
+  {
+    "Field": "source_code_reference",
+    "Type": "text",
+    "Null": "YES",
+    "Key": "",
+    "Default": null,
+    "Extra": ""
+  },
+  {
+    "Field": "tool_used",
+    "Type": "varchar(255)",
+    "Null": "YES",
+    "Key": "",
+    "Default": null,
+    "Extra": ""
+  }
+]
