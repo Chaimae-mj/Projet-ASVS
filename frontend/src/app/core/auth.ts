@@ -1,15 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+@Injectable({ providedIn: 'root' }) 
 
-@Injectable({ providedIn: 'root' })
 export class AuthService {
-  private api = 'http://localhost:5000';
-
-  constructor(private http: HttpClient) { }
-
+      constructor(private http: HttpClient) { }
+private baseUrl = environment.apiUrl;
   login(body: { email: string; password: string }) {
-    return this.http.post(`${this.api}/auth/login`, body);
-  }
+    return this.http.post(`${this.baseUrl}/auth/login`, body);
+  } 
 
   saveToken(token: string) {
     localStorage.setItem('token', token); // ✅ مهم
