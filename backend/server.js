@@ -2,15 +2,20 @@
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 
-const { v4: uuidv4 } = require("uuid");
 const express = require("express");
+const app = express();
+
+const { v4: uuidv4 } = require("uuid");
 const cors = require("cors");
 const fs = require("fs");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("./db");
 
-app.listen(PORT, () => console.log("✅ Server running on", PORT));
+// ✅ (اختياري) باش أي crash يبان فـ Railway logs
+process.on("uncaughtException", (err) => console.error("UNCAUGHT:", err));
+process.on("unhandledRejection", (err) => console.error("UNHANDLED:", err));
+
 // --- START MIGRATIONS ---
 (async () => {
   try {
@@ -61,28 +66,23 @@ try {
 }
 if (!fetch) throw new Error("No fetch available");
 
-const app = express();
+
 
 /* ======================
    BASIC MIDDLEWARES
 ====================== */
-app.use(
-  cors({
-    origin: 'https://projet-asvs.vercel.app',
-    credentials: true,
-  })
-);
-app.use(express.json());
 app.use(cors({
   origin: [
-    'http://localhost:4200',
-    'https://epicontinental-bok-multibranchiate.ngrok-free.dev',
-    'https://TON-PROJET.vercel.app'
+    "http://localhost:4200",
+    "https://projet-asvs.vercel.app",
+    "https://epicontinental-bok-multibranchiate.ngrok-free.dev",
   ],
   credentials: true,
 }));
-console.log("JWT_SECRET exists?", !!process.env.JWT_SECRET);
 
+app.use(express.json());
+
+console.log("JWT_SECRET exists?", !!process.env.JWT_SECRET);
 /* ======================
    HELPERS
 ====================== */
