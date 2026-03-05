@@ -263,10 +263,10 @@ app.get("/ping", (req, res) => {
 app.get("/debug/db", async (req, res) => {
   try {
     const [rows] = await pool.execute("SELECT 1 as ok");
-    res.json(rows[0]);
+    return res.json(rows[0]);
   } catch (err) {
     console.error("❌ DB ERROR FULL:", err);
-    res.status(500).json({
+    return res.status(500).json({
       error: "DB_ERROR",
       code: err?.code,
       message: err?.message,
