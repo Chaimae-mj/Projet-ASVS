@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
+import { environment } from '../../environments/environment';
 export type AiLanguage =
   | 'java'
   | 'javascript'
@@ -39,19 +39,20 @@ export type AiSuggestRequest = {
   language: AiLanguage;
 };
 
+
 @Injectable({ providedIn: 'root' })
 export class AiService {
   //private api = 'http://localhost:5000';
-private api = 'https://epicontinental-bok-multibranchiate.ngrok-free.dev';
   constructor(private http: HttpClient) {}
 
+  private baseUrl = environment.apiUrl;
   // (اختياري) خليه إذا باقي كتستعمله
   generate(body: AiSuggestRequest): Observable<AiSuggestResponse> {
-    return this.http.post<AiSuggestResponse>(`${this.api}/ai/generate`, body);
+    return this.http.post<AiSuggestResponse>(`${this.baseUrl}/ai/generate`, body);
   }
 
   // ✅ هذا هو اللي كتستعمله checklist
   suggest(body: AiSuggestRequest): Observable<AiSuggestResponse> {
-    return this.http.post<AiSuggestResponse>(`${this.api}/ai/suggest`, body);
+    return this.http.post<AiSuggestResponse>(`${this.baseUrl}/ai/suggest`, body);
   }
 }

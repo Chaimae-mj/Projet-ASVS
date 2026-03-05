@@ -6,8 +6,7 @@ import { Injectable } from '@angular/core';
 })
 export class AuthService {
 
-  private apiUrl = 'http://localhost:5000';
-
+apiUrl = "https://projet-asvs-production.up.railway.app"
   constructor(private http: HttpClient) {}
 
   login(data: any) {
