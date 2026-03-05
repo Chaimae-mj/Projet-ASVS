@@ -10,6 +10,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("./db");
 
+app.listen(PORT, () => console.log("✅ Server running on", PORT));
 // --- START MIGRATIONS ---
 (async () => {
   try {
@@ -351,13 +352,14 @@ app.post("/auth/login", async (req, res) => {
     );
 
     return res.json({ token, role: normalizedRole });
-  } catch (err) {
-    console.error("❌ LOGIN ERROR RAW:", err);
-    return res.status(500).json({
-      error: String(err?.message || err || "Unknown error"),
-      stack: err?.stack || null,
-    });
-  }
+} catch (err) {
+  console.error("DB ERROR:", err.code, err.message);
+  return res.status(500).json({
+    error: "DB_ERROR",
+    code: err.code,
+    message: err.message
+  });
+}
 });
 
 app.post("/auth/register", authMiddleware, roleMiddleware(["ADMIN"]), async (req, res) => {
