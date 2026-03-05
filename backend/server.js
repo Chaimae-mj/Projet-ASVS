@@ -66,10 +66,10 @@ const app = express();
    BASIC MIDDLEWARES
 ====================== */
 app.use(
- cors({
-  origin: 'https://projet-asvs.vercel.app',
-  credentials: true,
-})
+  cors({
+    origin: 'https://projet-asvs.vercel.app',
+    credentials: true,
+  })
 );
 app.use(express.json());
 app.use(cors({
@@ -401,6 +401,8 @@ app.get("/users", authMiddleware, roleMiddleware(["ADMIN"]), async (req, res) =>
     res.status(500).json({ error: err.message || "Internal server error" });
   }
 });
+
+app.get("/", (req, res) => res.send("ASVS API is running ✅"));
 
 app.patch("/users/:id", authMiddleware, roleMiddleware(["ADMIN"]), async (req, res) => {
   try {
