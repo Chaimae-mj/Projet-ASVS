@@ -66,10 +66,10 @@ const app = express();
    BASIC MIDDLEWARES
 ====================== */
 app.use(
-  cors({
-    origin: "http://localhost:4200",
-    credentials: true,
-  })
+ cors({
+  origin: 'https://projet-asvs.vercel.app',
+  credentials: true,
+})
 );
 app.use(express.json());
 app.use(cors({
