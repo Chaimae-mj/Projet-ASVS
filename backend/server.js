@@ -265,8 +265,13 @@ app.get("/debug/db", async (req, res) => {
     const [rows] = await pool.execute("SELECT 1 as ok");
     res.json(rows[0]);
   } catch (err) {
-    console.error("❌ DB ERROR:", err);
-    res.status(500).json({ error: String(err?.message || err) });
+    console.error("❌ DB ERROR FULL:", err);
+    res.status(500).json({
+      error: "DB_ERROR",
+      code: err?.code,
+      message: err?.message,
+      errno: err?.errno,
+    });
   }
 });
 
