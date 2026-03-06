@@ -659,8 +659,7 @@ app.get("/projects/:projectId/github/files", authMiddleware, roleMiddleware(["AD
     let repo = match[2];
     if (repo.endsWith(".git")) repo = repo.slice(0, -4);
 
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/HEAD?recursive=1`;
-    console.log(`Fetching github files for ${owner}/${repo}`);
+const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/main?recursive=1`;    console.log(`Fetching github files for ${owner}/${repo}`);
 
     const HEADERS = {
       "User-Agent": "ASVS-Core-Engine",
