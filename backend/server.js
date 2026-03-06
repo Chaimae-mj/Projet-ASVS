@@ -11,7 +11,13 @@ const fs = require("fs");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("./db");
+// 1) get repo info (default_branch)
+const repoInfoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers: HEADERS });
+const repoInfo = await repoInfoRes.json();
+const branch = repoInfo.default_branch || "main";
 
+// 2) get tree from default branch
+const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
 // ✅ (اختياري) باش أي crash يبان فـ Railway logs
 process.on("uncaughtException", (err) => console.error("UNCAUGHT:", err));
 process.on("unhandledRejection", (err) => console.error("UNHANDLED:", err));
