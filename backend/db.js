@@ -1,15 +1,19 @@
-const mysql = require("mysql2");
+// backend/db.js
+const mysql = require("mysql2/promise");
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT || 3306),
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  port: Number(process.env.DB_PORT || 3306),
+
   waitForConnections: true,
   connectionLimit: 10,
-  connectTimeout: 10000,
-  ssl: { rejectUnauthorized: false },
+  queueLimit: 0,
+
+  // ✅ IMPORTANT: FreeSQLDatabase doesn't support SSL
+  ssl: undefined,
 });
 
-module.exports = pool.promise();
+module.exports = pool;
