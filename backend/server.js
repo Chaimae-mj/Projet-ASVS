@@ -74,7 +74,7 @@ if (!fetch) throw new Error("No fetch available");
 app.use(cors({
   origin: [
     "http://localhost:4200",
-    "https://projet-asvs.vercel.app",
+    "https://projet-asvs-h.vercel.app",
     "https://epicontinental-bok-multibranchiate.ngrok-free.dev",
   ],
   credentials: true,
