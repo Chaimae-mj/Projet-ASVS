@@ -37,7 +37,10 @@ export class LoginComponent implements OnInit {
       this.router.navigateByUrl('/dashboard');
     }
   }
-
+fillLogin(email: string, password: string) {
+  this.email = email;
+  this.password = password;
+}
   onLogin() {
     this.loading = true;
     this.error = '';

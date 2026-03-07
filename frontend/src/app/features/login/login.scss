@@ -234,3 +234,34 @@
   margin-bottom: 20px;
   text-align: center;
 }
+.hint-accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.hint-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover { background: rgba(255,255,255,0.08); }
+  code { font-size: 12px; opacity: 0.85; }
+  .hint-pass { font-size: 11px; opacity: 0.5; margin-left: auto; }
+}
+
+.hint-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  min-width: 52px;
+  text-align: center;
+  &.admin { background: #6366f1; color: #fff; }
+  &.dev   { background: #22c55e; color: #fff; }
+  &.aud   { background: #f59e0b; color: #fff; }
+}

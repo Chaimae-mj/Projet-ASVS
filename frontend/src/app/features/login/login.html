@@ -60,12 +60,29 @@
       </button>
     </div>
 
-    <div class="alert-hint">
-      <strong>{{ t('OR') }}</strong>
-      <div class="mt-1 small">
-        Email: <code>admin@test.com</code><br />
-        Password: <code>123456</code>
-      </div>
+ <div class="alert-hint">
+  <strong>{{ t('OR') }}</strong>
+  <div class="hint-accounts">
+
+    <div class="hint-row" (click)="fillLogin('admin@test.com', '123456')">
+      <span class="hint-badge admin">Admin</span>
+      <code>admin@test.com</code>
+      <span class="hint-pass">123456</span>
     </div>
+
+    <div class="hint-row" (click)="fillLogin('dev1@test.com', '123456')">
+      <span class="hint-badge dev">Dev</span>
+      <code>dev1@test.com</code>
+      <span class="hint-pass">123456</span>
+    </div>
+
+    <div class="hint-row" (click)="fillLogin('aud1@test.com', '123456')">
+      <span class="hint-badge aud">Auditor</span>
+      <code>aud1@test.com</code>
+      <span class="hint-pass">123456</span>
+    </div>
+
+  </div>
+</div>
   </div>
 </div>
