@@ -2,11 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
+
 
 @Injectable({ providedIn: 'root' })
 export class ProjectService {
-  //private api = 'http://localhost:5000';
-private api = 'https://epicontinental-bok-multibranchiate.ngrok-free.dev';
+   private api = environment.apiUrl;
   private projectsSubject = new BehaviorSubject<any[]>([]);
   projects$ = this.projectsSubject.asObservable();
 

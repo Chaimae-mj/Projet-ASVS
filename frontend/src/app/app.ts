@@ -5,7 +5,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 
 import { NavbarComponent } from './core/components/navbar/navbar';
-
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -13,4 +13,5 @@ import { NavbarComponent } from './core/components/navbar/navbar';
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App { }
+
+export class App {  }
