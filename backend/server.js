@@ -12,18 +12,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("./db");
 
-// 2) get tree from default branch
-// 1) Get repo info to find default branch (main/master/anything)
-const repoInfoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers: HEADERS });
-if (!repoInfoRes.ok) {
-  const errText = await repoInfoRes.text();
-  return res.status(repoInfoRes.status).json({ error: "GitHub repo lookup failed", details: errText });
-}
-const repoInfo = await repoInfoRes.json();
-const branch = repoInfo.default_branch || "main";
 
-// 2) Fetch tree for that branch
-const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;// ✅ (اختياري) باش أي crash يبان فـ Railway logs
 process.on("uncaughtException", (err) => console.error("UNCAUGHT:", err));
 process.on("unhandledRejection", (err) => console.error("UNHANDLED:", err));
 
