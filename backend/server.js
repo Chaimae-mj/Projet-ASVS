@@ -33,14 +33,15 @@ process.on("unhandledRejection", (err) => console.error("UNHANDLED:", err));
     }
 
     // 3. Create project_members table
-    await pool.execute(`
-      CREATE TABLE IF NOT EXISTS project_members (
-        project_id VARCHAR(36),
-        user_id VARCHAR(36),
-        added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (project_id, user_id)
-      )
-    `);
+// ✅ SAH
+await pool.execute(`
+  CREATE TABLE IF NOT EXISTS project_members (
+    project_id VARCHAR(36),
+    user_id VARCHAR(36),
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (project_id, user_id)
+  )
+`);
 
     // 4. Add github_url to projects table
     const [projRows] = await pool.execute("DESCRIBE projects");
