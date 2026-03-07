@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export type RequirementProgress = {
   requirement_id?: string;
@@ -50,7 +51,7 @@ export type ProjectStats = {
 @Injectable({ providedIn: 'root' })
 export class RequirementService {
   //private api = 'http://localhost:5000';
-private api = 'https://epicontinental-bok-multibranchiate.ngrok-free.dev';
+private api = environment.apiUrl;
   constructor(private http: HttpClient) { }
 
   // ✅ GET merged checklist

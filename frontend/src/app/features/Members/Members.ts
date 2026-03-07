@@ -8,6 +8,8 @@ import { forkJoin } from 'rxjs';
 import { LanguageService } from '../../core/services/language.service';
 import { ThemeService } from '../../core/services/theme.service';
 
+
+import { environment } from '../../../environments/environment';
 @Component({
   standalone: true,
   selector: 'app-members',
@@ -16,7 +18,7 @@ import { ThemeService } from '../../core/services/theme.service';
   styleUrl: './Members.scss'
 })
 export class Members implements OnInit {
-  private api = 'http://localhost:5000';
+private api = environment.apiUrl; 
   projectId = '';
   project: any = null;
 

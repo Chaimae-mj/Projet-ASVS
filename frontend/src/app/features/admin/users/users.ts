@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LanguageService } from '../../../core/services/language.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
     standalone: true,
@@ -14,7 +15,7 @@ import { ThemeService } from '../../../core/services/theme.service';
     imports: [CommonModule, FormsModule]
 })
 export class AdminUsers {
-    private api = 'http://localhost:5000';
+private api = environment.apiUrl;
 
     user = {
         name: '',
